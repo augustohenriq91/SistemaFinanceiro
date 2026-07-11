@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Receitas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 30px;
+            color: #222;
+        }
+
+        .topo {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .botao {
+            display: inline-block;
+            text-decoration: none;
+            background: #1f2937;
+            color: white;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+
+        .positivo-bg {
+            background: #16803c;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        th, td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background: #f9fafb;
+            color: #555;
+        }
+
+        .status {
+            font-weight: bold;
+        }
+
+        .recebido {
+            color: #16803c;
+        }
+
+        .pendente {
+            color: #b45309;
+        }
+    </style>
+</head>
+<body>
+    <div class="topo">
+        <h1>Receitas</h1>
+
+        <div>
+            <a href="/" class="botao">Voltar ao Dashboard</a>
+            <a href="/receitas/nova/" class="botao positivo-bg">Nova Receita</a>
+        </div>
+    </div>
+
+    <table>
+        <tr>
+            <th>Descrição</th>
+            <th>Valor</th>
+            <th>Data</th>
+            <th>Categoria</th>
+            <th>Conta</th>
+            <th>Status</th>
+        </tr>
+
+        {% for receita in receitas %}
+        <tr>
+            <td>{{ receita.descricao }}</td>
+            <td>R$ {{ receita.valor }}</td>
+            <td>{{ receita.data }}</td>
+            <td>{{ receita.categoria }}</td>
+            <td>{{ receita.conta }}</td>
+            <td>
+                {% if receita.recebido %}
+                    <span class="status recebido">Recebido</span>
+                {% else %}
+                    <span class="status pendente">Pendente</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="6">Nenhuma receita cadastrada.</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

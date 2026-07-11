@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Financeiro</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 30px;
+            color: #222;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        .cards {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            min-width: 220px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .card h2 {
+            font-size: 16px;
+            margin: 0 0 10px;
+            color: #666;
+        }
+
+        .valor {
+            font-size: 26px;
+            font-weight: bold;
+        }
+
+        .positivo {
+            color: #16803c;
+        }
+
+        .negativo {
+            color: #b42318;
+        }
+
+        .listas {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .lista {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            color: #555;
+            font-size: 14px;
+        }
+        .acoes {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .botao {
+            display: inline-block;
+            text-decoration: none;
+            background: #1f2937;
+            color: white;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+
+        .positivo-bg {
+            background: #16803c;
+        }
+
+        .negativo-bg {
+            background: #b42318;
+        }
+    </style>
+</head>
+<body>
+    <h1>Dashboard Financeiro</h1>
+
+    <div class="acoes">
+        <a href="/admin/" class="botao">Acessar Admin</a>
+        <a href="/contas/" class="botao">Ver Contas</a>
+        <a href="/receitas/nova/" class="botao">Nova Receita</a>
+        <a href="/despesas/nova/" class="botao">Nova Despesa</a>
+        <a href="/receitas/" class="botao positivo-bg">Ver Receitas</a>
+        <a href="/despesas/" class="botao negativo-bg">Ver Despesas</a>
+    </div>
+
+    <div class="cards">
+        <div class="card">
+            <h2>Total de receitas</h2>
+            <div class="valor positivo">R$ {{ total_receitas }}</div>
+        </div>
+
+        <div class="card">
+            <h2>Total de despesas</h2>
+            <div class="valor negativo">R$ {{ total_despesas }}</div>
+        </div>
+
+        <div class="card">
+            <h2>Saldo</h2>
+            <div class="valor">R$ {{ saldo }}</div>
+        </div>
+
+        <div class="card">
+            <h2>Contas cadastradas</h2>
+            <div class="valor">{{ contas|length }}</div>
+        </div>
+    </div>
+
+    <div class="listas">
+        <div class="lista">
+            <h2>Últimas receitas</h2>
+            <table>
+                <tr>
+                    <th>Descrição</th>
+                    <th>Valor</th>
+                    <th>Data</th>
+                </tr>
+                {% for receita in ultimas_receitas %}
+                <tr>
+                    <td>{{ receita.descricao }}</td>
+                    <td>R$ {{ receita.valor }}</td>
+                    <td>{{ receita.data }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3">Nenhuma receita cadastrada.</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+
+        <div class="lista">
+            <h2>Últimas despesas</h2>
+            <table>
+                <tr>
+                    <th>Descrição</th>
+                    <th>Valor</th>
+                    <th>Data</th>
+                </tr>
+                {% for despesa in ultimas_despesas %}
+                <tr>
+                    <td>{{ despesa.descricao }}</td>
+                    <td>R$ {{ despesa.valor }}</td>
+                    <td>{{ despesa.data }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3">Nenhuma despesa cadastrada.</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+</body>
+</html>

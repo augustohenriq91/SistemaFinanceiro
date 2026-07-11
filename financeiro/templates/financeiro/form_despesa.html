@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Nova Despesa</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 30px;
+            color: #222;
+        }
+
+        .container {
+            background: white;
+            max-width: 640px;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-top: 14px;
+            margin-bottom: 6px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 15px;
+        }
+
+        input[type="checkbox"] {
+            width: auto;
+        }
+
+        .acoes {
+            margin-top: 20px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .botao {
+            border: none;
+            text-decoration: none;
+            background: #1f2937;
+            color: white;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .negativo-bg {
+            background: #b42318;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Nova Despesa</h1>
+
+        <form method="post">
+            {% csrf_token %}
+
+            {{ form.as_p }}
+
+            <div class="acoes">
+                <button type="submit" class="botao negativo-bg">Salvar Despesa</button>
+                <a href="/despesas/" class="botao">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
