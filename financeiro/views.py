@@ -1,9 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.core.paginator import Paginator
 from django.db.models import Sum
 from django.db.models.deletion import ProtectedError
 from decimal import Decimal
-from datetime import date
+from datetime import date, datetime
+from urllib.parse import urlencode
 from .models import Conta, Receita, Despesa, Categoria, EmprestimoCartao, ParcelaEmprestimo
 from .forms import ReceitaForm, DespesaForm, ContaForm, CategoriaForm, EmprestimoCartaoForm
 
@@ -23,7 +25,8 @@ def data_com_dia_seguro(data_base, dia):
     return data_base.replace(day=min(dia_seguro, dias_por_mes[data_base.month - 1]))
 
 
-def data_vencimento_fatura(data_compra, dia_fechamento, dia_vencimento):
+def data_vencimento_fatura(data_compra, dias_antes_vencimento, dia_vencimento):
+    dia_fechamento = max(1, dia_vencimento - dias_antes_vencimento)
     mes_fatura = data_compra
 
     if data_compra.day > dia_fechamento:
@@ -138,18 +141,103 @@ def dashboard(request):
 
 def lista_receitas(request):
     receitas = Receita.objects.order_by('-data')
+    q = request.GET.get('q', '').strip()
+    categoria_id = request.GET.get('categoria', '')
+    conta_id = request.GET.get('conta', '')
+    status = request.GET.get('status', '')
+    data = request.GET.get('data', '')
+
+    if q:
+        receitas = receitas.filter(descricao__icontains=q)
+    if categoria_id:
+        receitas = receitas.filter(categoria_id=categoria_id)
+    if conta_id:
+        receitas = receitas.filter(conta_id=conta_id)
+    if status == 'recebido':
+        receitas = receitas.filter(recebido=True)
+    elif status == 'pendente':
+        receitas = receitas.filter(recebido=False)
+    if data:
+        dt = None
+        try:
+            dt = datetime.strptime(data, '%d/%m/%Y').date()
+        except Exception:
+            try:
+                # also accept ISO format if present
+                dt = datetime.strptime(data, '%Y-%m-%d').date()
+            except Exception:
+                dt = None
+        if dt:
+            receitas = receitas.filter(data=dt)
+
+    categorias = Categoria.objects.filter(tipo='receita').order_by('nome')
+    contas = Conta.objects.order_by('nome')
+    paginator = Paginator(receitas, 10)
+    page_obj = paginator.get_page(request.GET.get('page'))
+    querystring = urlencode({k: v for k, v in request.GET.items() if v and k != 'page'})
 
     contexto = {
-        'receitas': receitas,
+        'receitas': page_obj,
+        'categorias': categorias,
+        'contas': contas,
+        'page_obj': page_obj,
+        'querystring': querystring,
+        'filtro_q': q,
+        'filtro_categoria': categoria_id,
+        'filtro_conta': conta_id,
+        'filtro_status': status,
+        'filtro_data': data,
     }
 
     return render(request, 'financeiro/lista_receitas.html', contexto)
 
 def lista_despesas(request):
     despesas = Despesa.objects.order_by('-data')
+    q = request.GET.get('q', '').strip()
+    categoria_id = request.GET.get('categoria', '')
+    conta_id = request.GET.get('conta', '')
+    status = request.GET.get('status', '')
+    data = request.GET.get('data', '')
+
+    if q:
+        despesas = despesas.filter(descricao__icontains=q)
+    if categoria_id:
+        despesas = despesas.filter(categoria_id=categoria_id)
+    if conta_id:
+        despesas = despesas.filter(conta_id=conta_id)
+    if status == 'pago':
+        despesas = despesas.filter(pago=True)
+    elif status == 'pendente':
+        despesas = despesas.filter(pago=False)
+    if data:
+        dt = None
+        try:
+            dt = datetime.strptime(data, '%d/%m/%Y').date()
+        except Exception:
+            try:
+                dt = datetime.strptime(data, '%Y-%m-%d').date()
+            except Exception:
+                dt = None
+        if dt:
+            despesas = despesas.filter(data=dt)
+
+    categorias = Categoria.objects.filter(tipo='despesa').order_by('nome')
+    contas = Conta.objects.order_by('nome')
+    paginator = Paginator(despesas, 10)
+    page_obj = paginator.get_page(request.GET.get('page'))
+    querystring = urlencode({k: v for k, v in request.GET.items() if v and k != 'page'})
 
     contexto = {
-        'despesas': despesas,
+        'despesas': page_obj,
+        'categorias': categorias,
+        'contas': contas,
+        'page_obj': page_obj,
+        'querystring': querystring,
+        'filtro_q': q,
+        'filtro_categoria': categoria_id,
+        'filtro_conta': conta_id,
+        'filtro_status': status,
+        'filtro_data': data,
     }
 
     return render(request, 'financeiro/lista_despesas.html', contexto)
@@ -252,9 +340,26 @@ def excluir_despesa(request, despesa_id):
 
 def lista_contas(request):
     contas = Conta.objects.order_by('nome')
+    q = request.GET.get('q', '').strip()
+    tipo = request.GET.get('tipo', '')
+    cartao = request.GET.get('cartao', '')
+
+    if q:
+        contas = contas.filter(nome__icontains=q)
+    if tipo:
+        contas = contas.filter(tipo=tipo)
+    if cartao == 'sim':
+        contas = contas.filter(possui_cartao_credito=True)
+    elif cartao == 'nao':
+        contas = contas.filter(possui_cartao_credito=False)
+
+    paginator = Paginator(contas, 10)
+    page_obj = paginator.get_page(request.GET.get('page'))
+    querystring = urlencode({k: v for k, v in request.GET.items() if v and k != 'page'})
+
     contas_com_saldo = []
 
-    for conta in contas:
+    for conta in page_obj:
         total_receitas = Receita.objects.filter(
             conta=conta,
             recebido=True
@@ -276,6 +381,12 @@ def lista_contas(request):
 
     contexto = {
         'contas_com_saldo': contas_com_saldo,
+        'tipos_conta': Conta.TIPO_CHOICES,
+        'page_obj': page_obj,
+        'querystring': querystring,
+        'filtro_q': q,
+        'filtro_tipo': tipo,
+        'filtro_cartao': cartao,
     }
 
     return render(request, 'financeiro/lista_contas.html', contexto)
@@ -335,9 +446,24 @@ def excluir_conta(request, conta_id):
 
 def lista_categorias(request):
     categorias = Categoria.objects.order_by('tipo', 'nome')
+    q = request.GET.get('q', '').strip()
+    tipo = request.GET.get('tipo', '')
+
+    if q:
+        categorias = categorias.filter(nome__icontains=q)
+    if tipo:
+        categorias = categorias.filter(tipo=tipo)
+
+    paginator = Paginator(categorias, 10)
+    page_obj = paginator.get_page(request.GET.get('page'))
+    querystring = urlencode({k: v for k, v in request.GET.items() if v and k != 'page'})
 
     contexto = {
-        'categorias': categorias,
+        'categorias': page_obj,
+        'page_obj': page_obj,
+        'querystring': querystring,
+        'filtro_q': q,
+        'filtro_tipo': tipo,
     }
 
     return render(request, 'financeiro/lista_categorias.html', contexto)
@@ -397,17 +523,42 @@ def excluir_categoria(request, categoria_id):
 
 def lista_emprestimos_cartao(request):
     emprestimos = EmprestimoCartao.objects.select_related('cartao_utilizado', 'conta_recebimento').order_by('-data_compra')
+    q = request.GET.get('q', '').strip()
+    cartao_id = request.GET.get('cartao', '')
+    status = request.GET.get('status', '')
+
+    if q:
+        emprestimos = emprestimos.filter(pessoa__icontains=q)
+    if cartao_id:
+        emprestimos = emprestimos.filter(cartao_utilizado_id=cartao_id)
+
     parcelas = ParcelaEmprestimo.objects.select_related('emprestimo', 'emprestimo__cartao_utilizado', 'emprestimo__conta_recebimento').order_by('vencimento', 'emprestimo__pessoa', 'numero')
+    if status == 'pago':
+        parcelas = parcelas.filter(pago=True)
+    elif status == 'pendente':
+        parcelas = parcelas.filter(pago=False)
+
+    paginator = Paginator(parcelas, 10)
+    parcelas_page = paginator.get_page(request.GET.get('page'))
+    querystring = urlencode({k: v for k, v in request.GET.items() if v and k != 'page'})
+
     total_emprestado = emprestimos.aggregate(total=Sum('valor_total'))['total'] or 0
     total_pago = ParcelaEmprestimo.objects.filter(pago=True).aggregate(total=Sum('valor'))['total'] or 0
     total_pendente = ParcelaEmprestimo.objects.filter(pago=False).aggregate(total=Sum('valor'))['total'] or 0
+    cartoes = Conta.objects.filter(possui_cartao_credito=True).order_by('nome')
 
     contexto = {
         'emprestimos': emprestimos,
-        'parcelas': parcelas,
+        'parcelas': parcelas_page,
         'total_emprestado': total_emprestado,
         'total_pago': total_pago,
         'total_pendente': total_pendente,
+        'cartoes': cartoes,
+        'page_obj': parcelas_page,
+        'querystring': querystring,
+        'filtro_q': q,
+        'filtro_cartao': cartao_id,
+        'filtro_status': status,
     }
 
     return render(request, 'financeiro/lista_emprestimos_cartao.html', contexto)

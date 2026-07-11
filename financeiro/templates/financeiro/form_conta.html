@@ -5,7 +5,7 @@
 {% block page_subtitle %}Cadastre bancos, carteiras e investimentos.{% endblock %}
 
 {% block page_actions %}
-    <a href="/contas/" class="btn btn-light">Voltar</a>
+    <a href="/contas/" class="btn btn-light"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></span>Voltar</a>
 {% endblock %}
 
 {% block content %}
@@ -44,6 +44,7 @@
                 {{ form.dia_fechamento_fatura.label_tag }}
                 {{ form.dia_fechamento_fatura }}
                 {{ form.dia_fechamento_fatura.errors }}
+                <small class="form-help">Informe quantos dias antes do vencimento a fatura fecha. Ex: vencimento dia 7, fechamento 5 dias antes.</small>
             </p>
 
             <p>
@@ -54,8 +55,8 @@
         </div>
 
         <div class="actions">
-            <button type="submit" class="btn btn-success">Salvar Conta</button>
-            <a href="/contas/" class="btn btn-light">Cancelar</a>
+            <button type="submit" class="btn btn-success"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></span>Salvar Conta</button>
+            <a href="/contas/" class="btn btn-light"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"></path><path d="M6 6l12 12"></path></svg></span>Cancelar</a>
         </div>
     </form>
 </section>

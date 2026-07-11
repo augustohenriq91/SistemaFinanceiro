@@ -5,7 +5,7 @@
 {% block page_subtitle %}Contas vinculadas a lancamentos ficam protegidas.{% endblock %}
 
 {% block page_actions %}
-    <a href="/contas/" class="btn btn-light">Voltar</a>
+    <a href="/contas/" class="btn btn-light"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></span>Voltar</a>
 {% endblock %}
 
 {% block content %}
@@ -21,8 +21,8 @@
     <form method="post">
         {% csrf_token %}
         <div class="actions">
-            <button type="submit" class="btn btn-danger">Sim, excluir</button>
-            <a href="/contas/" class="btn btn-light">Cancelar</a>
+            <button type="submit" class="btn btn-danger"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg></span>Sim, excluir</button>
+            <a href="/contas/" class="btn btn-light"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"></path><path d="M6 6l12 12"></path></svg></span>Cancelar</a>
         </div>
     </form>
 </section>

@@ -5,7 +5,7 @@
 {% block page_subtitle %}Registre ou atualize uma saida financeira.{% endblock %}
 
 {% block page_actions %}
-    <a href="/despesas/" class="btn btn-light">Voltar</a>
+    <a href="/despesas/" class="btn btn-light"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></span>Voltar</a>
 {% endblock %}
 
 {% block content %}
@@ -15,8 +15,8 @@
         {{ form.as_p }}
 
         <div class="actions">
-            <button type="submit" class="btn btn-danger">Salvar Despesa</button>
-            <a href="/despesas/" class="btn btn-light">Cancelar</a>
+            <button type="submit" class="btn btn-danger"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></span>Salvar Despesa</button>
+            <a href="/despesas/" class="btn btn-light"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"></path><path d="M6 6l12 12"></path></svg></span>Cancelar</a>
         </div>
     </form>
 </section>

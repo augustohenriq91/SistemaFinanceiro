@@ -1,63 +1,65 @@
 {% extends 'financeiro/base.html' %}
 
-{% block title %}Dashboard Financeiro{% endblock %}
-{% block page_title %}Dashboard Financeiro{% endblock %}
-{% block page_subtitle %}Resumo geral do seu controle financeiro pessoal.{% endblock %}
+{% block title %}Painel Financeiro - Visão Geral{% endblock %}
+{% block page_title %}Painel Financeiro{% endblock %}
+{% block page_subtitle %}Visão geral das receitas, despesas, saldos e parcelas pendentes no mês atual.{% endblock %}
 
 {% block page_actions %}
-    <a href="/receitas/nova/" class="btn btn-success">Nova Receita</a>
-    <a href="/despesas/nova/" class="btn btn-danger">Nova Despesa</a>
-    <a href="/contas/nova/" class="btn btn-secondary">Nova Conta</a>
-    <a href="/categorias/nova/" class="btn btn-secondary">Nova Categoria</a>
-    <a href="/cartao-emprestado/novo/" class="btn btn-secondary">Emprestar Cartao</a>
+    <a href="/receitas/nova/" class="btn btn-success"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></span>Adicionar receita</a>
+    <a href="/despesas/nova/" class="btn btn-danger"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></span>Adicionar despesa</a>
+    <a href="/contas/nova/" class="btn btn-secondary"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></span>Adicionar conta</a>
+    <a href="/categorias/nova/" class="btn btn-secondary"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></span>Adicionar categoria</a>
+    <a href="/cartao-emprestado/novo/" class="btn btn-secondary"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></span>Adicionar empréstimo</a>
 {% endblock %}
 
 {% block content %}
-<div class="cards">
-    <div class="card">
-        <div class="card-label">Receitas recebidas</div>
-        <div class="card-value positive">R$ {{ total_receitas }}</div>
-    </div>
+{% load currency_tags %}
+<section class="panel wide-panel dashboard-hero">
+    <section class="hero-card">
+        <div class="hero-card-title">Saldo atual</div>
+        <div class="hero-card-value">{{ saldo|format_brl }}</div>
+        <p class="hero-card-text">Saldo consolidado das contas após receitas e despesas. Receitas e despesas têm peso semelhante neste painel.</p>
+    </section>
 
-    <div class="card">
-        <div class="card-label">Despesas pagas</div>
-        <div class="card-value negative">R$ {{ total_despesas }}</div>
-    </div>
+    <section class="hero-summary">
+        <div class="summary-card primary">
+            <span>Saldo atual</span>
+            <strong>{{ saldo|format_brl }}</strong>
+        </div>
+        <div class="summary-card positive">
+            <span>Receitas recebidas</span>
+            <strong>{{ total_receitas|format_brl }}</strong>
+        </div>
+        <div class="summary-card negative">
+            <span>Despesas pagas</span>
+            <strong>{{ total_despesas|format_brl }}</strong>
+        </div>
+        <div class="summary-card warning">
+            <span>Cartao pendente no mes</span>
+            <strong>{{ total_cartao_mes_pendente|format_brl }}</strong>
+        </div>
+        <div class="summary-card">
+            <span>Saldo total das contas</span>
+            <strong>{{ saldo_total_contas|format_brl }}</strong>
+        </div>
+        <div class="summary-card neutral">
+            <span>Contas cadastradas</span>
+            <strong>{{ contas|length }}</strong>
+        </div>
+    </section>
+</section>
 
-    <div class="card">
-        <div class="card-label">Saldo realizado</div>
-        <div class="card-value neutral">R$ {{ saldo }}</div>
-    </div>
-
-    <div class="card">
-        <div class="card-label">Saldo total das contas</div>
-        <div class="card-value neutral">R$ {{ saldo_total_contas }}</div>
-    </div>
-
-    <div class="card">
-        <div class="card-label">Receitas pendentes</div>
-        <div class="card-value positive">R$ {{ total_receitas_pendentes }}</div>
-    </div>
-
-    <div class="card">
-        <div class="card-label">Despesas pendentes</div>
-        <div class="card-value negative">R$ {{ total_despesas_pendentes }}</div>
-    </div>
-
-    <div class="card">
-        <div class="card-label">Contas cadastradas</div>
-        <div class="card-value neutral">{{ contas|length }}</div>
-    </div>
-
-    <div class="card">
-        <div class="card-label">Cartao pendente no mes</div>
-        <div class="card-value negative">R$ {{ total_cartao_mes_pendente }}</div>
-    </div>
+<div class="dashboard-actions">
+    <a href="/receitas/nova/" class="btn btn-success"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></span>Adicionar receita</a>
+    <a href="/despesas/nova/" class="btn btn-danger"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></span>Adicionar despesa</a>
+    <a href="/contas/nova/" class="btn btn-secondary"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></span>Adicionar conta</a>
+    <a href="/categorias/nova/" class="btn btn-secondary"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></span>Adicionar categoria</a>
+    <a href="/cartao-emprestado/novo/" class="btn btn-secondary"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></span>Adicionar empréstimo</a>
 </div>
 
-<div class="grid">
+<div class="grid dashboard-grid">
     <section class="panel">
-        <h2>Ultimas receitas</h2>
+        <h2>Últimas receitas lançadas</h2>
         <div class="table-wrap">
             <table>
                 <tr>
@@ -68,8 +70,8 @@
                 {% for receita in ultimas_receitas %}
                 <tr>
                     <td>{{ receita.descricao }}</td>
-                    <td>R$ {{ receita.valor }}</td>
-                    <td>{{ receita.data }}</td>
+                    <td>{{ receita.valor|format_brl }}</td>
+                    <td>{{ receita.data|date:"d/m/Y" }}</td>
                 </tr>
                 {% empty %}
                 <tr>
@@ -81,7 +83,7 @@
     </section>
 
     <section class="panel">
-        <h2>Ultimas despesas</h2>
+        <h2>Últimas despesas lançadas</h2>
         <div class="table-wrap">
             <table>
                 <tr>
@@ -92,8 +94,8 @@
                 {% for despesa in ultimas_despesas %}
                 <tr>
                     <td>{{ despesa.descricao }}</td>
-                    <td>R$ {{ despesa.valor }}</td>
-                    <td>{{ despesa.data }}</td>
+                    <td>{{ despesa.valor|format_brl }}</td>
+                    <td>{{ despesa.data|date:"d/m/Y" }}</td>
                 </tr>
                 {% empty %}
                 <tr>
@@ -105,7 +107,7 @@
     </section>
 
     <section class="panel">
-        <h2>Receitas pendentes</h2>
+        <h2>Receitas pendentes a receber</h2>
         <div class="table-wrap">
             <table>
                 <tr>
@@ -116,8 +118,8 @@
                 {% for receita in receitas_pendentes %}
                 <tr>
                     <td>{{ receita.descricao }}</td>
-                    <td>R$ {{ receita.valor }}</td>
-                    <td>{{ receita.data }}</td>
+                    <td>{{ receita.valor|format_brl }}</td>
+                    <td>{{ receita.data|date:"d/m/Y" }}</td>
                 </tr>
                 {% empty %}
                 <tr>
@@ -129,7 +131,7 @@
     </section>
 
     <section class="panel">
-        <h2>Despesas pendentes</h2>
+        <h2>Despesas pendentes de pagamento</h2>
         <div class="table-wrap">
             <table>
                 <tr>
@@ -140,8 +142,8 @@
                 {% for despesa in despesas_pendentes %}
                 <tr>
                     <td>{{ despesa.descricao }}</td>
-                    <td>R$ {{ despesa.valor }}</td>
-                    <td>{{ despesa.data }}</td>
+                    <td>{{ despesa.valor|format_brl }}</td>
+                    <td>{{ despesa.data|date:"d/m/Y" }}</td>
                 </tr>
                 {% empty %}
                 <tr>
@@ -152,8 +154,8 @@
         </div>
     </section>
 
-    <section class="panel">
-        <h2>Cartao emprestado pendente no mes</h2>
+    <section class="panel wide-panel">
+        <h2>Parcelas pendentes de cartão (mês atual)</h2>
         <div class="table-wrap">
             <table>
                 <tr>
@@ -175,8 +177,8 @@
                         {% endif %}
                     </td>
                     <td>{{ parcela.numero }}/{{ parcela.emprestimo.quantidade_parcelas }}</td>
-                    <td>R$ {{ parcela.valor }}</td>
-                    <td>{{ parcela.vencimento }}</td>
+                    <td>{{ parcela.valor|format_brl }}</td>
+                    <td>{{ parcela.vencimento|date:"d/m/Y" }}</td>
                     <td>
                         {% if parcela.emprestimo.conta_recebimento %}
                             {{ parcela.emprestimo.conta_recebimento }}
