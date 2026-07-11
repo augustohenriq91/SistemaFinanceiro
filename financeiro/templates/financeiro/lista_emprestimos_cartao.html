@@ -1,0 +1,160 @@
+{% extends 'financeiro/base.html' %}
+
+{% block title %}Cartao Emprestado{% endblock %}
+{% block page_title %}Cartao Emprestado{% endblock %}
+{% block page_subtitle %}Controle quem usou seu cartao, o valor, o cartao utilizado e o pagamento das parcelas.{% endblock %}
+
+{% block page_actions %}
+    <a href="/cartao-emprestado/novo/" class="btn btn-success">Novo Emprestimo</a>
+{% endblock %}
+
+{% block content %}
+<div class="cards">
+    <div class="card">
+        <div class="card-label">Total emprestado</div>
+        <div class="card-value neutral">R$ {{ total_emprestado }}</div>
+    </div>
+    <div class="card">
+        <div class="card-label">Parcelas pagas</div>
+        <div class="card-value positive">R$ {{ total_pago }}</div>
+    </div>
+    <div class="card">
+        <div class="card-label">Parcelas pendentes</div>
+        <div class="card-value negative">R$ {{ total_pendente }}</div>
+    </div>
+</div>
+
+<div class="split-layout">
+    <section class="panel">
+        <h2>Emprestimos cadastrados</h2>
+
+        <div class="loan-list">
+            {% for emprestimo in emprestimos %}
+            <div class="card loan-card">
+                <h2>{{ emprestimo.pessoa }}</h2>
+                <div class="loan-meta">
+                    {% if emprestimo.cartao_utilizado %}
+                        {{ emprestimo.cartao_utilizado.nome }}
+                    {% else %}
+                        {{ emprestimo.banco }}
+                    {% endif %}
+                    | {{ emprestimo.descricao }}
+                </div>
+
+                <div class="account-line">
+                    <span>Valor total</span>
+                    <strong>R$ {{ emprestimo.valor_total }}</strong>
+                </div>
+                <div class="account-line">
+                    <span>Parcelas</span>
+                    <strong>{{ emprestimo.quantidade_parcelas }}x</strong>
+                </div>
+                <div class="account-line">
+                    <span>Data da compra</span>
+                    <strong>{{ emprestimo.data_compra }}</strong>
+                </div>
+                <div class="account-line">
+                    <span>Fecha a fatura</span>
+                    <strong>
+                        {% if emprestimo.cartao_utilizado %}
+                            Dia {{ emprestimo.cartao_utilizado.dia_fechamento_fatura }}
+                        {% else %}
+                            Nao definido
+                        {% endif %}
+                    </strong>
+                </div>
+                <div class="account-line">
+                    <span>Vence a fatura</span>
+                    <strong>
+                        {% if emprestimo.cartao_utilizado %}
+                            Dia {{ emprestimo.cartao_utilizado.dia_vencimento_fatura }}
+                        {% else %}
+                            Dia {{ emprestimo.dia_vencimento_cartao }}
+                        {% endif %}
+                    </strong>
+                </div>
+                <div class="account-line">
+                    <span>Receber em</span>
+                    <strong>
+                        {% if emprestimo.conta_recebimento %}
+                            {{ emprestimo.conta_recebimento }}
+                        {% else %}
+                            Nao definido
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div class="actions" style="margin-top: 14px;">
+                    <a href="/cartao-emprestado/{{ emprestimo.id }}/editar/" class="btn btn-light">Editar</a>
+                    <a href="/cartao-emprestado/{{ emprestimo.id }}/excluir/" class="btn btn-danger">Excluir</a>
+                </div>
+            </div>
+            {% empty %}
+            <p class="empty">Nenhum emprestimo no cartao cadastrado.</p>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="panel">
+        <h2>Parcelas por mes</h2>
+        <div class="table-wrap">
+            <table>
+                <tr>
+                    <th>Mes</th>
+                    <th>Pessoa</th>
+                    <th>Cartao</th>
+                    <th>Parcela</th>
+                    <th>Valor</th>
+                    <th>Receber em</th>
+                    <th>Status</th>
+                    <th>Acao</th>
+                </tr>
+
+                {% for parcela in parcelas %}
+                <tr>
+                    <td>{{ parcela.vencimento|date:"m/Y" }}</td>
+                    <td>{{ parcela.emprestimo.pessoa }}</td>
+                    <td>
+                        {% if parcela.emprestimo.cartao_utilizado %}
+                            {{ parcela.emprestimo.cartao_utilizado.nome }}
+                        {% else %}
+                            {{ parcela.emprestimo.banco }}
+                        {% endif %}
+                    </td>
+                    <td>{{ parcela.numero }}/{{ parcela.emprestimo.quantidade_parcelas }}</td>
+                    <td>R$ {{ parcela.valor }}</td>
+                    <td>
+                        {% if parcela.emprestimo.conta_recebimento %}
+                            {{ parcela.emprestimo.conta_recebimento }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if parcela.pago %}
+                            <span class="pill pill-success">Pago</span>
+                        {% else %}
+                            <span class="pill pill-danger">Pendente</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form method="post" action="/cartao-emprestado/parcela/{{ parcela.id }}/pagar/" class="inline-form">
+                            {% csrf_token %}
+                            {% if parcela.pago %}
+                                <button type="submit" class="btn btn-light btn-small">Marcar pendente</button>
+                            {% else %}
+                                <button type="submit" class="btn btn-success btn-small">Marcar pago</button>
+                            {% endif %}
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="empty">Nenhuma parcela cadastrada.</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}

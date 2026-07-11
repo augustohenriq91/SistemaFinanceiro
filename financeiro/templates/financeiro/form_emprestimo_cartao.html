@@ -1,0 +1,27 @@
+{% extends 'financeiro/base.html' %}
+
+{% block title %}Cartao Emprestado{% endblock %}
+{% block page_title %}{% if emprestimo %}Editar Emprestimo{% else %}Novo Emprestimo{% endif %}{% endblock %}
+{% block page_subtitle %}Selecione o cartao usado, quem usou, valor e quantidade de parcelas.{% endblock %}
+
+{% block page_actions %}
+    <a href="/cartao-emprestado/" class="btn btn-light">Voltar</a>
+{% endblock %}
+
+{% block content %}
+<section class="form-card">
+    <div class="alert-warning">
+        O campo "Cartao utilizado" mostra apenas contas marcadas com cartao de credito. Ao marcar uma parcela como paga, o sistema cria automaticamente uma receita na conta escolhida em "Conta recebimento".
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <div class="actions">
+            <button type="submit" class="btn btn-success">Salvar Emprestimo</button>
+            <a href="/cartao-emprestado/" class="btn btn-light">Cancelar</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

@@ -1,105 +1,60 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Contas</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f6f8;
-            margin: 0;
-            padding: 30px;
-            color: #222;
-        }
+{% extends 'financeiro/base.html' %}
 
-        .topo {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
+{% block title %}Contas{% endblock %}
+{% block page_title %}Contas{% endblock %}
+{% block page_subtitle %}Acompanhe saldos por banco, carteira ou investimento.{% endblock %}
 
-        .botao {
-            display: inline-block;
-            text-decoration: none;
-            background: #1f2937;
-            color: white;
-            padding: 10px 14px;
-            border-radius: 6px;
-            font-weight: bold;
-        }
+{% block page_actions %}
+    <a href="/contas/nova/" class="btn btn-success">Nova Conta</a>
+{% endblock %}
 
-        .cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 18px;
-        }
+{% block content %}
+<div class="account-grid">
+    {% for item in contas_com_saldo %}
+    <section class="card account-card">
+        <h2>{{ item.conta.nome }}</h2>
+        <div class="account-type">{{ item.conta.get_tipo_display }}</div>
 
-        .card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-
-        .card h2 {
-            margin: 0 0 8px;
-        }
-
-        .tipo {
-            color: #666;
-            margin-bottom: 14px;
-        }
-
-        .saldo {
-            font-size: 24px;
-            font-weight: bold;
-            color: #1f2937;
-        }
-        .positivo-bg {
-            background: #16803c;
-        }
-        .perigo-bg {
-            background: #b42318;
-        }
-        .botoes-topo {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-    </style>
-</head>
-<body>
-    <div class="topo">
-    <h1>Contas</h1>
-
-    <div class="botoes-topo">
-        <a href="/" class="botao">Voltar ao Dashboard</a>
-        <a href="/contas/nova/" class="botao positivo-bg">Nova Conta</a>
-    </div>
-</div>
-
-    <div class="cards">
-        {% for item in contas_com_saldo %}
-        <div class="card">
-            <h2>{{ item.conta.nome }}</h2>
-            <div class="tipo">{{ item.conta.get_tipo_display }}</div>
-
-            <p>Saldo inicial: R$ {{ item.conta.saldo_inicial }}</p>
-            <p>Receitas: R$ {{ item.total_receitas }}</p>
-            <p>Despesas: R$ {{ item.total_despesas }}</p>
-
-            <div class="saldo">Saldo atual: R$ {{ item.saldo_atual }}</div>
-            <div class="botoes-topo" style="margin-top: 16px;">
-                <a href="/contas/{{ item.conta.id }}/editar/" class="botao">Editar</a>
-                <a href="/contas/{{ item.conta.id }}/excluir/" class="botao perigo-bg">Excluir</a>
-            </div>
+        <div class="account-line">
+            <span>Saldo inicial</span>
+            <strong>R$ {{ item.conta.saldo_inicial }}</strong>
         </div>
-        {% empty %}
-        <p>Nenhuma conta cadastrada.</p>
-        {% endfor %}
-    </div>
-</body>
-</html>
+        <div class="account-line">
+            <span>Receitas</span>
+            <strong class="positive">R$ {{ item.total_receitas }}</strong>
+        </div>
+        <div class="account-line">
+            <span>Despesas</span>
+            <strong class="negative">R$ {{ item.total_despesas }}</strong>
+        </div>
+
+        <div class="account-line">
+            <span>Cartao de credito</span>
+            <strong>{% if item.conta.possui_cartao_credito %}Sim{% else %}Nao{% endif %}</strong>
+        </div>
+
+        {% if item.conta.possui_cartao_credito %}
+        <div class="account-line">
+            <span>Fecha a fatura</span>
+            <strong>Dia {{ item.conta.dia_fechamento_fatura }}</strong>
+        </div>
+        <div class="account-line">
+            <span>Vence a fatura</span>
+            <strong>Dia {{ item.conta.dia_vencimento_fatura }}</strong>
+        </div>
+        {% endif %}
+
+        <div class="account-balance">R$ {{ item.saldo_atual }}</div>
+
+        <div class="actions" style="margin-top: 16px;">
+            <a href="/contas/{{ item.conta.id }}/editar/" class="btn btn-light">Editar</a>
+            <a href="/contas/{{ item.conta.id }}/excluir/" class="btn btn-danger">Excluir</a>
+        </div>
+    </section>
+    {% empty %}
+    <section class="panel">
+        <p class="empty">Nenhuma conta cadastrada.</p>
+    </section>
+    {% endfor %}
+</div>
+{% endblock %}

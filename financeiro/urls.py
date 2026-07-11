@@ -19,4 +19,9 @@ urlpatterns = [
     path('categorias/nova/', views.nova_categoria, name='nova_categoria'),
     path('categorias/<int:categoria_id>/editar/', views.editar_categoria, name='editar_categoria'),
     path('categorias/<int:categoria_id>/excluir/', views.excluir_categoria, name='excluir_categoria'),
+    path('cartao-emprestado/', views.lista_emprestimos_cartao, name='lista_emprestimos_cartao'),
+    path('cartao-emprestado/novo/', views.novo_emprestimo_cartao, name='novo_emprestimo_cartao'),
+    path('cartao-emprestado/<int:emprestimo_id>/editar/', views.editar_emprestimo_cartao, name='editar_emprestimo_cartao'),
+    path('cartao-emprestado/<int:emprestimo_id>/excluir/', views.excluir_emprestimo_cartao, name='excluir_emprestimo_cartao'),
+    path('cartao-emprestado/parcela/<int:parcela_id>/pagar/', views.alternar_pagamento_parcela, name='alternar_pagamento_parcela'),
 ]

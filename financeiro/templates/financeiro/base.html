@@ -1,0 +1,50 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Sistema Financeiro{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'financeiro/styles.css' %}">
+</head>
+<body>
+    <div class="app-shell">
+        <aside class="sidebar">
+            <div class="brand">Financeiro Pessoal</div>
+            <div class="brand-subtitle">Controle simples e organizado</div>
+
+            <nav class="nav">
+                <a href="/">Dashboard</a>
+                <a href="/receitas/">Receitas</a>
+                <a href="/despesas/">Despesas</a>
+                <a href="/contas/">Contas</a>
+                <a href="/categorias/">Categorias</a>
+                <a href="/cartao-emprestado/">Cartao emprestado</a>
+                <a href="/admin/">Admin</a>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <header class="page-header">
+                <div>
+                    <h1 class="page-title">{% block page_title %}{% endblock %}</h1>
+                    <p class="page-subtitle">{% block page_subtitle %}{% endblock %}</p>
+                </div>
+                <div class="actions">
+                    {% block page_actions %}{% endblock %}
+                </div>
+            </header>
+
+            {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="alert-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</body>
+</html>
