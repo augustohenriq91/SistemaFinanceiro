@@ -90,6 +90,7 @@ def dashboard(request):
 
     contas = Conta.objects.all()
     saldo_total_contas = 0
+    contas_com_saldo = []
 
     for conta in contas:
         receitas_conta = Receita.objects.filter(
@@ -102,7 +103,15 @@ def dashboard(request):
             pago=True
         ).aggregate(total=Sum('valor'))['total'] or 0
 
-        saldo_total_contas += conta.saldo_inicial + receitas_conta - despesas_conta
+        saldo_atual_conta = conta.saldo_inicial + receitas_conta - despesas_conta
+        saldo_total_contas += saldo_atual_conta
+
+        contas_com_saldo.append({
+            'conta': conta,
+            'total_receitas': receitas_conta,
+            'total_despesas': despesas_conta,
+            'saldo_atual': saldo_atual_conta,
+        })
 
     ultimas_receitas = Receita.objects.order_by('-data')[:5]
     ultimas_despesas = Despesa.objects.order_by('-data')[:5]
@@ -119,6 +128,30 @@ def dashboard(request):
         vencimento__month=hoje.month,
     ).order_by('vencimento', 'emprestimo__pessoa', 'numero')
     total_cartao_mes_pendente = parcelas_cartao_mes.aggregate(total=Sum('valor'))['total'] or 0
+    total_faturas_cartao = total_cartao_mes_pendente
+    # Variação do saldo em relação ao mês anterior (net: receitas recebidas - despesas pagas)
+    mes_atual_year = hoje.year
+    mes_atual_month = hoje.month
+    mes_anterior = adicionar_meses(hoje, -1)
+
+    receitas_mes_atual = Receita.objects.filter(recebido=True, data__year=mes_atual_year, data__month=mes_atual_month).aggregate(total=Sum('valor'))['total'] or 0
+    despesas_mes_atual = Despesa.objects.filter(pago=True, data__year=mes_atual_year, data__month=mes_atual_month).aggregate(total=Sum('valor'))['total'] or 0
+    net_mes_atual = receitas_mes_atual - despesas_mes_atual
+
+    receitas_mes_anterior = Receita.objects.filter(recebido=True, data__year=mes_anterior.year, data__month=mes_anterior.month).aggregate(total=Sum('valor'))['total'] or 0
+    despesas_mes_anterior = Despesa.objects.filter(pago=True, data__year=mes_anterior.year, data__month=mes_anterior.month).aggregate(total=Sum('valor'))['total'] or 0
+    net_mes_anterior = receitas_mes_anterior - despesas_mes_anterior
+
+    saldo_variacao_percent = None
+    saldo_variacao_change = net_mes_atual - net_mes_anterior
+    try:
+        if net_mes_anterior != 0:
+            saldo_variacao_percent = float((net_mes_atual - net_mes_anterior) / (abs(net_mes_anterior)) * 100.0)
+    except Exception:
+        saldo_variacao_percent = None
+
+    if saldo_variacao_percent is not None:
+        saldo_variacao_percent = round(saldo_variacao_percent, 1)
 
     contexto = {
         'total_receitas': total_receitas,
@@ -128,12 +161,17 @@ def dashboard(request):
         'saldo': saldo,
         'saldo_total_contas': saldo_total_contas,
         'contas': contas,
+        'contas_com_saldo': contas_com_saldo,
         'ultimas_receitas': ultimas_receitas,
         'ultimas_despesas': ultimas_despesas,
         'receitas_pendentes': receitas_pendentes,
         'despesas_pendentes': despesas_pendentes,
         'parcelas_cartao_mes': parcelas_cartao_mes,
         'total_cartao_mes_pendente': total_cartao_mes_pendente,
+        'total_faturas_cartao': total_faturas_cartao,
+        'saldo_variacao_percent': saldo_variacao_percent,
+        'saldo_variacao_change': saldo_variacao_change,
+        'saldo_variacao_class': ('positive' if (saldo_variacao_percent is not None and saldo_variacao_percent > 0) or (saldo_variacao_percent is None and saldo_variacao_change > 0) else ('negative' if (saldo_variacao_percent is not None and saldo_variacao_percent < 0) or (saldo_variacao_percent is None and saldo_variacao_change < 0) else 'neutral')),
     }
 
     return render(request, 'financeiro/dashboard.html', contexto)

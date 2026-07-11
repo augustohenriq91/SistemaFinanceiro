@@ -1,20 +1,28 @@
 {% extends 'financeiro/base.html' %}
 {% load currency_tags %}
 
-{% block title %}Cartao Emprestado{% endblock %}
-{% block page_title %}Cartao Emprestado{% endblock %}
+{% block title %}Gasto com cartões{% endblock %}
+{% block page_title %}Gasto com cartões{% endblock %}
 {% block page_subtitle %}Controle quem usou seu cartao, o valor, o cartao utilizado e o pagamento das parcelas.{% endblock %}
 
 {% block page_actions %}
-    <a href="/cartao-emprestado/novo/" class="btn btn-success"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></span>Adicionar empréstimo</a>
+    <a href="/cartao-emprestado/novo/" class="btn btn-success"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></span>Adicionar gasto com cartões</a>
 {% endblock %}
 
 {% block content %}
-<section class="panel">
-    <form method="get" class="filter-row">
+<section class="panel panel--glass">
+    <div class="panel-header">
+        <div>
+            <h2 class="panel-title">Filtrar gastos com cartões</h2>
+            <p class="panel-description">Use os controles abaixo para encontrar rapidamente lançamentos, cartões e status de parcelas.</p>
+        </div>
+        <button type="button" class="btn btn-light btn-small" onclick="document.getElementById('filter-form').classList.toggle('open')">Mostrar filtros</button>
+    </div>
+
+    <form id="filter-form" method="get" class="filter-row open">
         <input type="text" name="q" value="{{ filtro_q }}" placeholder="Buscar pessoa" class="filter-input">
         <select name="cartao" class="filter-select">
-            <option value="">Todos cartoes</option>
+            <option value="">Todos cartões</option>
             {% for cartao in cartoes %}
                 <option value="{{ cartao.id }}" {% if filtro_cartao == cartao.id|stringformat:"s" %}selected{% endif %}>{{ cartao.nome }}</option>
             {% endfor %}
@@ -24,11 +32,11 @@
             <option value="pago" {% if filtro_status == 'pago' %}selected{% endif %}>Parcelas pagas</option>
             <option value="pendente" {% if filtro_status == 'pendente' %}selected{% endif %}>Parcelas pendentes</option>
         </select>
-        <button type="submit" class="btn btn-secondary" data-icon="filter"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9v7l4 2v-9z"></path></svg></span>Filtrar</button>
+        <button type="submit" class="btn btn-primary"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9v7l4 2v-9z"></path></svg></span>Aplicar</button>
     </form>
 </section>
 
-<div class="cards">
+<div class="cards stats-cards">
     <div class="card">
         <div class="card-label">Total emprestado</div>
         <div class="card-value neutral">{{ total_emprestado|format_brl }}</div>
@@ -44,68 +52,85 @@
 </div>
 
 <div class="split-layout">
-    <section class="panel">
-        <h2>Emprestimos cadastrados</h2>
+    <section class="panel panel--padded">
+        <div class="panel-header">
+            <div>
+                <h2 class="panel-title">Gastos cadastrados</h2>
+                <p class="panel-description">Lista de gastos no cartão com detalhes de parcela, vencimento e fatura.</p>
+            </div>
+        </div>
 
         <div class="loan-list">
             {% for emprestimo in emprestimos %}
-            <div class="card loan-card">
-                <h2>{{ emprestimo.pessoa }}</h2>
-                <div class="loan-meta">
-                    {% if emprestimo.cartao_utilizado %}
-                        {{ emprestimo.cartao_utilizado.nome }}
-                    {% else %}
-                        {{ emprestimo.banco }}
-                    {% endif %}
-                    | {{ emprestimo.descricao }}
+            <div class="card loan-card" data-id="{{ emprestimo.id }}">
+                <div class="loan-summary" tabindex="0" role="button" aria-expanded="false">
+                    <div class="loan-summary-left">
+                        <h3 class="loan-person"><a href="/cartao-emprestado/{{ emprestimo.id }}/editar/" class="loan-edit-link">{{ emprestimo.pessoa }}</a></h3>
+                        <div class="loan-meta">
+                            {% if emprestimo.cartao_utilizado %}
+                                {{ emprestimo.cartao_utilizado.nome }}
+                            {% else %}
+                                {{ emprestimo.banco }}
+                            {% endif %}
+                            | {{ emprestimo.descricao }}
+                        </div>
+                    </div>
+                    <div class="loan-summary-right">
+                        <div class="loan-amount">{{ emprestimo.valor_total|format_brl }}</div>
+                        <div class="loan-parcels">{{ emprestimo.quantidade_parcelas }}x</div>
+                        <div class="loan-date">{{ emprestimo.data_compra|date:"d/m/Y" }}</div>
+                        <button class="btn btn-light btn-small toggle-details" aria-label="Ver detalhes">Detalhes</button>
+                    </div>
                 </div>
 
-                <div class="account-line">
-                    <span>Valor total</span>
-                    <strong>{{ emprestimo.valor_total|format_brl }}</strong>
-                </div>
-                <div class="account-line">
-                    <span>Parcelas</span>
-                    <strong>{{ emprestimo.quantidade_parcelas }}x</strong>
-                </div>
-                <div class="account-line">
-                    <span>Data da compra</span>
-                    <strong>{{ emprestimo.data_compra|date:"d/m/Y" }}</strong>
-                </div>
-                <div class="account-line">
-                    <span>Fecha a fatura</span>
-                    <strong>
-                        {% if emprestimo.cartao_utilizado %}
-                            {{ emprestimo.cartao_utilizado.dia_fechamento_fatura }} dias antes do vencimento
-                        {% else %}
-                            Nao definido
-                        {% endif %}
-                    </strong>
-                </div>
-                <div class="account-line">
-                    <span>Vence a fatura</span>
-                    <strong>
-                        {% if emprestimo.cartao_utilizado %}
-                            Dia {{ emprestimo.cartao_utilizado.dia_vencimento_fatura }}
-                        {% else %}
-                            Dia {{ emprestimo.dia_vencimento_cartao }}
-                        {% endif %}
-                    </strong>
-                </div>
-                <div class="account-line">
-                    <span>Receber em</span>
-                    <strong>
-                        {% if emprestimo.conta_recebimento %}
-                            {{ emprestimo.conta_recebimento }}
-                        {% else %}
-                            Nao definido
-                        {% endif %}
-                    </strong>
-                </div>
+                <div class="loan-details">
+                    <div class="account-line">
+                        <span>Valor total</span>
+                        <strong>{{ emprestimo.valor_total|format_brl }}</strong>
+                    </div>
+                    <div class="account-line">
+                        <span>Parcelas</span>
+                        <strong>{{ emprestimo.quantidade_parcelas }}x</strong>
+                    </div>
+                    <div class="account-line">
+                        <span>Data da compra</span>
+                        <strong>{{ emprestimo.data_compra|date:"d/m/Y" }}</strong>
+                    </div>
+                    <div class="account-line">
+                        <span>Fecha a fatura</span>
+                        <strong>
+                            {% if emprestimo.cartao_utilizado %}
+                                {{ emprestimo.cartao_utilizado.dia_fechamento_fatura }} dias antes do vencimento
+                            {% else %}
+                                Nao definido
+                            {% endif %}
+                        </strong>
+                    </div>
+                    <div class="account-line">
+                        <span>Vence a fatura</span>
+                        <strong>
+                            {% if emprestimo.cartao_utilizado %}
+                                Dia {{ emprestimo.cartao_utilizado.dia_vencimento_fatura }}
+                            {% else %}
+                                Dia {{ emprestimo.dia_vencimento_cartao }}
+                            {% endif %}
+                        </strong>
+                    </div>
+                    <div class="account-line">
+                        <span>Receber em</span>
+                        <strong>
+                            {% if emprestimo.conta_recebimento %}
+                                {{ emprestimo.conta_recebimento }}
+                            {% else %}
+                                Nao definido
+                            {% endif %}
+                        </strong>
+                    </div>
 
-                <div class="actions" style="margin-top: 14px;">
-                    <a href="/cartao-emprestado/{{ emprestimo.id }}/editar/" class="btn btn-light"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path></svg></span>Editar</a>
-                    <a href="/cartao-emprestado/{{ emprestimo.id }}/excluir/" class="btn btn-danger"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg></span>Excluir</a>
+                    <div class="actions card-actions">
+                        <a href="/cartao-emprestado/{{ emprestimo.id }}/editar/" class="btn btn-light btn-small"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path></svg></span>Editar</a>
+                        <a href="/cartao-emprestado/{{ emprestimo.id }}/excluir/" class="btn btn-danger btn-small"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg></span>Excluir</a>
+                    </div>
                 </div>
             </div>
             {% empty %}
@@ -114,19 +139,24 @@
         </div>
     </section>
 
-    <section class="panel">
-        <h2>Parcelas por mes</h2>
-        <div class="table-wrap">
+    <section class="panel panel--padded">
+        <div class="panel-header">
+            <div>
+                <h2 class="panel-title">Parcelas por mês</h2>
+                <p class="panel-description">Acompanhe o vencimento, status e ações de cada parcela do cartão.</p>
+            </div>
+        </div>
+        <div class="table-wrap table-wrap--shadow">
             <table>
                 <tr>
-                    <th>Mes</th>
+                    <th>Mês</th>
                     <th>Pessoa</th>
-                    <th>Cartao</th>
+                    <th>Cartão</th>
                     <th>Parcela</th>
                     <th>Valor</th>
                     <th>Receber em</th>
                     <th>Status</th>
-                    <th>Acao</th>
+                    <th>Ação</th>
                 </tr>
 
                 {% for parcela in parcelas %}
@@ -177,4 +207,46 @@
         {% include 'financeiro/pagination.html' with page_obj=page_obj querystring=querystring %}
     </section>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+    var storageKey = 'loan_expanded_v1';
+    var expandedSet = new Set();
+    try{
+        var raw = localStorage.getItem(storageKey);
+        if(raw){ JSON.parse(raw).forEach(function(id){ expandedSet.add(String(id)); }); }
+    }catch(e){ /* ignore */ }
+
+    function save(){
+        try{ localStorage.setItem(storageKey, JSON.stringify(Array.from(expandedSet))); }catch(e){}
+    }
+
+    document.querySelectorAll('.loan-summary').forEach(function(summary){
+        var card = summary.closest('.loan-card');
+        var id = card.getAttribute('data-id');
+        var btn = summary.querySelector('.toggle-details');
+
+        // initialize from storage
+        if(expandedSet.has(String(id))){ card.classList.add('expanded'); summary.setAttribute('aria-expanded', 'true'); if(btn) btn.setAttribute('aria-pressed','true'); }
+
+        function setExpanded(exp){
+            if(exp){ card.classList.add('expanded'); summary.setAttribute('aria-expanded', 'true'); if(btn) btn.setAttribute('aria-pressed','true'); expandedSet.add(String(id)); }
+            else{ card.classList.remove('expanded'); summary.setAttribute('aria-expanded', 'false'); if(btn) btn.setAttribute('aria-pressed','false'); expandedSet.delete(String(id)); }
+            save();
+        }
+
+        function toggle(e){
+            // if click came from the edit link, let it navigate
+            if(e && e.target.closest && e.target.closest('.loan-edit-link')) return;
+            setExpanded(card.classList.toggle('expanded'));
+        }
+
+        summary.addEventListener('click', toggle);
+        summary.addEventListener('keypress', function(e){ if(e.key === 'Enter' || e.key === ' ') toggle(e); });
+        if(btn){ btn.addEventListener('click', function(e){ e.stopPropagation(); toggle(e); }); }
+    });
+});
+</script>
 {% endblock %}

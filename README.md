@@ -10,8 +10,8 @@ Sistema web em Django para controle financeiro pessoal.
 - Despesas: listar, criar, editar e excluir
 - Contas: listar, criar, editar e excluir
 - Categorias: listar, criar, editar e excluir
-- Cartao emprestado: cadastrar pessoa, banco, valor usado e parcelas
-- Controle mensal de parcelas do cartao emprestado
+- Gasto com cartões: cadastrar pessoa, banco, valor usado e parcelas
+- Controle mensal de parcelas do gasto com cartões
 - Dia de vencimento do cartao em cada emprestimo
 - Dashboard mostra quem ainda nao pagou parcelas com vencimento no mes atual
 - Calculo de saldo por conta

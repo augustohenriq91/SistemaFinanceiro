@@ -4,27 +4,39 @@
 {% block page_title %}Painel Financeiro{% endblock %}
 {% block page_subtitle %}Visão geral das receitas, despesas, saldos e parcelas pendentes no mês atual.{% endblock %}
 
-{% block page_actions %}
-    <a href="/receitas/nova/" class="btn btn-success"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></span>Adicionar receita</a>
-    <a href="/despesas/nova/" class="btn btn-danger"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></span>Adicionar despesa</a>
-    <a href="/contas/nova/" class="btn btn-secondary"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></span>Adicionar conta</a>
-    <a href="/categorias/nova/" class="btn btn-secondary"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></span>Adicionar categoria</a>
-    <a href="/cartao-emprestado/novo/" class="btn btn-secondary"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></span>Adicionar empréstimo</a>
-{% endblock %}
+{% block page_actions %}{% endblock %}
 
 {% block content %}
 {% load currency_tags %}
 <section class="panel wide-panel dashboard-hero">
     <section class="hero-card">
         <div class="hero-card-title">Saldo atual</div>
-        <div class="hero-card-value">{{ saldo|format_brl }}</div>
+        <div class="hero-card-value {% if saldo < 0 %}negative{% else %}positive{% endif %}">
+            <span class="balance-indicator" aria-hidden="true">{% if saldo < 0 %}▼{% else %}▲{% endif %}</span>
+            {{ saldo|format_brl }}
+        </div>
         <p class="hero-card-text">Saldo consolidado das contas após receitas e despesas. Receitas e despesas têm peso semelhante neste painel.</p>
+        {% if saldo_variacao_percent %}
+            <div class="hero-variation {{ saldo_variacao_class }}">
+                {{ saldo_variacao_percent }}% vs mês anterior
+                <span class="tooltip-icon" tabindex="0">ⓘ
+                    <span class="tooltip-popup">Calculado como receitas recebidas menos despesas pagas no mês atual comparado ao mês anterior.</span>
+                </span>
+            </div>
+        {% else %}
+            <div class="hero-variation {{ saldo_variacao_class }}">
+                Variação: {{ saldo_variacao_change|format_brl }} vs mês anterior
+                <span class="tooltip-icon" tabindex="0">ⓘ
+                    <span class="tooltip-popup">Calculado como receitas recebidas menos despesas pagas no mês atual comparado ao mês anterior.</span>
+                </span>
+            </div>
+        {% endif %}
     </section>
 
     <section class="hero-summary">
         <div class="summary-card primary">
-            <span>Saldo atual</span>
-            <strong>{{ saldo|format_brl }}</strong>
+            <span>VALOR TOTAL DAS FATURAS</span>
+            <strong>{{ total_faturas_cartao|format_brl }}</strong>
         </div>
         <div class="summary-card positive">
             <span>Receitas recebidas</span>
@@ -49,13 +61,43 @@
     </section>
 </section>
 
-<div class="dashboard-actions">
-    <a href="/receitas/nova/" class="btn btn-success"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></span>Adicionar receita</a>
-    <a href="/despesas/nova/" class="btn btn-danger"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></span>Adicionar despesa</a>
-    <a href="/contas/nova/" class="btn btn-secondary"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></span>Adicionar conta</a>
-    <a href="/categorias/nova/" class="btn btn-secondary"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></span>Adicionar categoria</a>
-    <a href="/cartao-emprestado/novo/" class="btn btn-secondary"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></span>Adicionar empréstimo</a>
-</div>
+<section class="cards top-cards">
+    {% for item in contas_com_saldo %}
+    <article class="card account-card">
+        <a href="/contas/{{ item.conta.id }}/editar/" class="account-card-link">
+            <div class="account-card-head">
+                <h3>{{ item.conta.nome }}</h3>
+                <span class="account-type">{{ item.conta.get_tipo_display }}</span>
+            </div>
+
+            <div class="account-line">
+                <span>Saldo inicial</span>
+                <strong>{{ item.conta.saldo_inicial|format_brl }}</strong>
+            </div>
+            <div class="account-line">
+                <span>Receitas pagas</span>
+                <strong class="positive">{{ item.total_receitas|format_brl }}</strong>
+            </div>
+            <div class="account-line">
+                <span>Despesas pagas</span>
+                <strong class="negative">{{ item.total_despesas|format_brl }}</strong>
+            </div>
+            <div class="account-line">
+                <span>Saldo atual</span>
+                <strong class="account-balance">{{ item.saldo_atual|format_brl }}</strong>
+            </div>
+            <div class="account-line">
+                <span>Cartão de crédito</span>
+                <strong>{% if item.conta.possui_cartao_credito %}Sim{% else %}Não{% endif %}</strong>
+            </div>
+        </a>
+    </article>
+    {% empty %}
+    <section class="panel">
+        <p class="empty">Nenhuma conta cadastrada.</p>
+    </section>
+    {% endfor %}
+</section>
 
 <div class="grid dashboard-grid">
     <section class="panel">
