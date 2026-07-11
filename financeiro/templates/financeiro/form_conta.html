@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Nova Conta</title>
+</head>
+<body>
+    <h1>Nova Conta</h1>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <button type="submit">Salvar Conta</button>
+        <a href="/contas/">Cancelar</a>
+    </form>
+</body>
+</html>

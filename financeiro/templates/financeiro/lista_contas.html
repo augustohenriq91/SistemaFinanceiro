@@ -58,20 +58,44 @@
             font-weight: bold;
             color: #1f2937;
         }
+        .positivo-bg {
+            background: #16803c;
+        }
+        .perigo-bg {
+            background: #b42318;
+        }
+        .botoes-topo {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
     </style>
 </head>
 <body>
     <div class="topo">
-        <h1>Contas</h1>
+    <h1>Contas</h1>
+
+    <div class="botoes-topo">
         <a href="/" class="botao">Voltar ao Dashboard</a>
+        <a href="/contas/nova/" class="botao positivo-bg">Nova Conta</a>
     </div>
+</div>
 
     <div class="cards">
-        {% for conta in contas %}
+        {% for item in contas_com_saldo %}
         <div class="card">
-            <h2>{{ conta.nome }}</h2>
-            <div class="tipo">{{ conta.get_tipo_display }}</div>
-            <div class="saldo">R$ {{ conta.saldo_inicial }}</div>
+            <h2>{{ item.conta.nome }}</h2>
+            <div class="tipo">{{ item.conta.get_tipo_display }}</div>
+
+            <p>Saldo inicial: R$ {{ item.conta.saldo_inicial }}</p>
+            <p>Receitas: R$ {{ item.total_receitas }}</p>
+            <p>Despesas: R$ {{ item.total_despesas }}</p>
+
+            <div class="saldo">Saldo atual: R$ {{ item.saldo_atual }}</div>
+            <div class="botoes-topo" style="margin-top: 16px;">
+                <a href="/contas/{{ item.conta.id }}/editar/" class="botao">Editar</a>
+                <a href="/contas/{{ item.conta.id }}/excluir/" class="botao perigo-bg">Excluir</a>
+            </div>
         </div>
         {% empty %}
         <p>Nenhuma conta cadastrada.</p>

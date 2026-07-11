@@ -35,6 +35,10 @@
             background: #16803c;
         }
 
+        .perigo-bg {
+            background: #b42318;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
@@ -86,6 +90,7 @@
             <th>Categoria</th>
             <th>Conta</th>
             <th>Status</th>
+            <th>Ações</th>
         </tr>
 
         {% for receita in receitas %}
@@ -102,10 +107,14 @@
                     <span class="status pendente">Pendente</span>
                 {% endif %}
             </td>
+            <td>
+                <a href="/receitas/{{ receita.id }}/editar/" class="botao">Editar</a>
+                <a href="/receitas/{{ receita.id }}/excluir/" class="botao perigo-bg">Excluir</a>
+            </td>
         </tr>
         {% empty %}
         <tr>
-            <td colspan="6">Nenhuma receita cadastrada.</td>
+            <td colspan="7">Nenhuma receita cadastrada.</td>
         </tr>
         {% endfor %}
     </table>

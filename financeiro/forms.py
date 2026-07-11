@@ -1,5 +1,5 @@
 from django import forms
-from .models import Receita, Despesa
+from .models import Receita, Despesa, Conta, Categoria
 
 
 class ReceitaForm(forms.ModelForm):
@@ -18,3 +18,13 @@ class DespesaForm(forms.ModelForm):
         widgets = {
             'data': forms.DateInput(attrs={'type': 'date'}),
         }
+
+class ContaForm(forms.ModelForm):
+    class Meta:
+        model = Conta
+        fields = ['nome', 'tipo', 'saldo_inicial']
+
+class CategoriaForm(forms.ModelForm):
+    class Meta:
+        model = Categoria
+        fields = ['nome', 'tipo']

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Excluir Conta</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 30px;
+            color: #222;
+        }
+
+        .container {
+            background: white;
+            max-width: 640px;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        h1 {
+            margin-top: 0;
+        }
+
+        .alerta {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .erro {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .acoes {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .botao {
+            border: none;
+            text-decoration: none;
+            background: #1f2937;
+            color: white;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .perigo-bg {
+            background: #b42318;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Excluir Conta</h1>
+
+        {% if erro %}
+        <div class="erro">{{ erro }}</div>
+        {% endif %}
+
+        <div class="alerta">
+            Tem certeza que deseja excluir a conta <strong>{{ conta.nome }}</strong>?
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="acoes">
+                <button type="submit" class="botao perigo-bg">Sim, excluir</button>
+                <a href="/contas/" class="botao">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

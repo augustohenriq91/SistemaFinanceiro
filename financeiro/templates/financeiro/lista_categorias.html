@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Despesas</title>
+    <title>Categorias</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -21,6 +21,12 @@
             flex-wrap: wrap;
         }
 
+        .botoes-topo {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
         .botao {
             display: inline-block;
             text-decoration: none;
@@ -31,8 +37,8 @@
             font-weight: bold;
         }
 
-        .negativo-bg {
-            background: #b42318;
+        .positivo-bg {
+            background: #16803c;
         }
 
         .perigo-bg {
@@ -59,62 +65,54 @@
             color: #555;
         }
 
-        .status {
+        .tipo {
             font-weight: bold;
         }
 
-        .pago {
+        .receita {
             color: #16803c;
         }
 
-        .pendente {
-            color: #b45309;
+        .despesa {
+            color: #b42318;
         }
     </style>
 </head>
 <body>
     <div class="topo">
-        <h1>Despesas</h1>
+        <h1>Categorias</h1>
 
-        <div>
+        <div class="botoes-topo">
             <a href="/" class="botao">Voltar ao Dashboard</a>
-            <a href="/despesas/nova/" class="botao negativo-bg">Nova Despesa</a>
+            <a href="/categorias/nova/" class="botao positivo-bg">Nova Categoria</a>
         </div>
     </div>
 
     <table>
         <tr>
-            <th>Descrição</th>
-            <th>Valor</th>
-            <th>Data</th>
-            <th>Categoria</th>
-            <th>Conta</th>
-            <th>Status</th>
+            <th>Nome</th>
+            <th>Tipo</th>
             <th>Acoes</th>
         </tr>
 
-        {% for despesa in despesas %}
+        {% for categoria in categorias %}
         <tr>
-            <td>{{ despesa.descricao }}</td>
-            <td>R$ {{ despesa.valor }}</td>
-            <td>{{ despesa.data }}</td>
-            <td>{{ despesa.categoria }}</td>
-            <td>{{ despesa.conta }}</td>
+            <td>{{ categoria.nome }}</td>
             <td>
-                {% if despesa.pago %}
-                    <span class="status pago">Pago</span>
+                {% if categoria.tipo == 'receita' %}
+                    <span class="tipo receita">{{ categoria.get_tipo_display }}</span>
                 {% else %}
-                    <span class="status pendente">Pendente</span>
+                    <span class="tipo despesa">{{ categoria.get_tipo_display }}</span>
                 {% endif %}
             </td>
             <td>
-                <a href="/despesas/{{ despesa.id }}/editar/" class="botao">Editar</a>
-                <a href="/despesas/{{ despesa.id }}/excluir/" class="botao perigo-bg">Excluir</a>
+                <a href="/categorias/{{ categoria.id }}/editar/" class="botao">Editar</a>
+                <a href="/categorias/{{ categoria.id }}/excluir/" class="botao perigo-bg">Excluir</a>
             </td>
         </tr>
         {% empty %}
         <tr>
-            <td colspan="7">Nenhuma despesa cadastrada.</td>
+            <td colspan="3">Nenhuma categoria cadastrada.</td>
         </tr>
         {% endfor %}
     </table>
