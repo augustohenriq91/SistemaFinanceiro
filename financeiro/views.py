@@ -1,6 +1,5 @@
-from django.shortcuts import render, redirect, get_object_or_404
+﻿from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-<<<<<<< HEAD
 from django.conf import settings
 from django.http import FileResponse, Http404
 from django.core.paginator import Paginator
@@ -8,19 +7,11 @@ from django.db.models import Count, Sum
 from django.db.models.deletion import ProtectedError
 from decimal import Decimal
 from datetime import date, datetime, timedelta
-=======
-from django.core.paginator import Paginator
-from django.db.models import Sum
-from django.db.models.deletion import ProtectedError
-from decimal import Decimal
-from datetime import date, datetime
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
 from urllib.parse import urlencode
 from .models import Conta, Receita, Despesa, Categoria, EmprestimoCartao, ParcelaEmprestimo
 from .forms import ReceitaForm, DespesaForm, ContaForm, CategoriaForm, EmprestimoCartaoForm
 
 
-<<<<<<< HEAD
 MESES = [
     (1, 'Janeiro'),
     (2, 'Fevereiro'),
@@ -37,8 +28,6 @@ MESES = [
 ]
 
 
-=======
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
 def adicionar_meses(data, meses):
     mes = data.month - 1 + meses
     ano = data.year + mes // 12
@@ -54,7 +43,6 @@ def data_com_dia_seguro(data_base, dia):
     return data_base.replace(day=min(dia_seguro, dias_por_mes[data_base.month - 1]))
 
 
-<<<<<<< HEAD
 def interpretar_data_filtro(valor):
     if not valor:
         return None
@@ -128,30 +116,12 @@ def anos_disponiveis():
         anos.add(valor.year)
     anos.add(date.today().year)
     return sorted(anos, reverse=True)
-=======
-def data_vencimento_fatura(data_compra, dias_antes_vencimento, dia_vencimento):
-    dia_fechamento = max(1, dia_vencimento - dias_antes_vencimento)
-    mes_fatura = data_compra
-
-    if data_compra.day > dia_fechamento:
-        mes_fatura = adicionar_meses(data_compra, 1)
-
-    mes_vencimento = mes_fatura
-    if dia_vencimento <= dia_fechamento:
-        mes_vencimento = adicionar_meses(mes_fatura, 1)
-
-    return data_com_dia_seguro(mes_vencimento, dia_vencimento)
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
 
 
 def gerar_parcelas_emprestimo(emprestimo):
     emprestimo.parcelas.all().delete()
     cartao = emprestimo.cartao_utilizado
-<<<<<<< HEAD
     dias_antes_vencimento = cartao.dias_antes_fechamento_fatura if cartao else 1
-=======
-    dia_fechamento = cartao.dia_fechamento_fatura if cartao else 1
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
     dia_vencimento = cartao.dia_vencimento_fatura if cartao else emprestimo.dia_vencimento_cartao
     quantidade = emprestimo.quantidade_parcelas
     valor_base = (emprestimo.valor_total / Decimal(quantidade)).quantize(Decimal('0.01'))
@@ -170,11 +140,7 @@ def gerar_parcelas_emprestimo(emprestimo):
             vencimento=adicionar_meses(
                 data_vencimento_fatura(
                     emprestimo.data_compra,
-<<<<<<< HEAD
                     dias_antes_vencimento,
-=======
-                    dia_fechamento,
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
                     dia_vencimento
                 ),
                 numero - 1
@@ -193,7 +159,6 @@ def dashboard(request):
         total=Sum('valor')
     )['total'] or 0
 
-<<<<<<< HEAD
     total_receitas_pendentes = receitas_periodo.filter(recebido=False).aggregate(
         total=Sum('valor')
     )['total'] or 0
@@ -203,13 +168,6 @@ def dashboard(request):
     )['total'] or 0
 
     total_despesas_pendentes = despesas_periodo.filter(pago=False).aggregate(
-=======
-    total_receitas_pendentes = Receita.objects.filter(recebido=False).aggregate(
-        total=Sum('valor')
-    )['total'] or 0
-
-    total_despesas = Despesa.objects.filter(pago=True).aggregate(
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
         total=Sum('valor')
     )['total'] or 0
 
@@ -244,7 +202,6 @@ def dashboard(request):
             'saldo_atual': saldo_atual_conta,
         })
 
-<<<<<<< HEAD
     ultimas_receitas = receitas_periodo.order_by('-data')[:5]
     ultimas_despesas = despesas_periodo.order_by('-data')[:5]
     receitas_pendentes = receitas_periodo.filter(recebido=False).order_by('data')[:5]
@@ -256,19 +213,10 @@ def dashboard(request):
     quantidade_receitas_pendentes = receitas_periodo.filter(recebido=False).count()
     proxima_despesa_pendente = despesas_periodo.filter(pago=False).order_by('data').first()
     parcelas_cartao_mes_base = ParcelaEmprestimo.objects.select_related(
-=======
-    ultimas_receitas = Receita.objects.order_by('-data')[:5]
-    ultimas_despesas = Despesa.objects.order_by('-data')[:5]
-    receitas_pendentes = Receita.objects.filter(recebido=False).order_by('data')[:5]
-    despesas_pendentes = Despesa.objects.filter(pago=False).order_by('data')[:5]
-    hoje = date.today()
-    parcelas_cartao_mes = ParcelaEmprestimo.objects.select_related(
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
         'emprestimo',
         'emprestimo__cartao_utilizado',
         'emprestimo__conta_recebimento',
     ).filter(
-<<<<<<< HEAD
         vencimento__year=ano_selecionado,
         vencimento__month=mes_selecionado,
     ).order_by('vencimento', 'emprestimo__pessoa', 'numero')
@@ -289,18 +237,6 @@ def dashboard(request):
     mes_atual_year = ano_selecionado
     mes_atual_month = mes_selecionado
     mes_anterior = adicionar_meses(data_periodo, -1)
-=======
-        pago=False,
-        vencimento__year=hoje.year,
-        vencimento__month=hoje.month,
-    ).order_by('vencimento', 'emprestimo__pessoa', 'numero')
-    total_cartao_mes_pendente = parcelas_cartao_mes.aggregate(total=Sum('valor'))['total'] or 0
-    total_faturas_cartao = total_cartao_mes_pendente
-    # Variação do saldo em relação ao mês anterior (net: receitas recebidas - despesas pagas)
-    mes_atual_year = hoje.year
-    mes_atual_month = hoje.month
-    mes_anterior = adicionar_meses(hoje, -1)
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
 
     receitas_mes_atual = Receita.objects.filter(recebido=True, data__year=mes_atual_year, data__month=mes_atual_month).aggregate(total=Sum('valor'))['total'] or 0
     despesas_mes_atual = Despesa.objects.filter(pago=True, data__year=mes_atual_year, data__month=mes_atual_month).aggregate(total=Sum('valor'))['total'] or 0
@@ -334,7 +270,6 @@ def dashboard(request):
         'ultimas_despesas': ultimas_despesas,
         'receitas_pendentes': receitas_pendentes,
         'despesas_pendentes': despesas_pendentes,
-<<<<<<< HEAD
         'total_despesas_vencidas': total_despesas_vencidas,
         'quantidade_despesas_vencidas': quantidade_despesas_vencidas,
         'quantidade_receitas_pendentes': quantidade_receitas_pendentes,
@@ -352,11 +287,6 @@ def dashboard(request):
         'anos': anos_disponiveis(),
         'mes_selecionado': mes_selecionado,
         'ano_selecionado': ano_selecionado,
-=======
-        'parcelas_cartao_mes': parcelas_cartao_mes,
-        'total_cartao_mes_pendente': total_cartao_mes_pendente,
-        'total_faturas_cartao': total_faturas_cartao,
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
         'saldo_variacao_percent': saldo_variacao_percent,
         'saldo_variacao_change': saldo_variacao_change,
         'saldo_variacao_class': ('positive' if (saldo_variacao_percent is not None and saldo_variacao_percent > 0) or (saldo_variacao_percent is None and saldo_variacao_change > 0) else ('negative' if (saldo_variacao_percent is not None and saldo_variacao_percent < 0) or (saldo_variacao_percent is None and saldo_variacao_change < 0) else 'neutral')),
@@ -365,7 +295,6 @@ def dashboard(request):
     return render(request, 'financeiro/dashboard.html', contexto)
 
 
-<<<<<<< HEAD
 def relatorios(request):
     try:
         ano = int(request.GET.get('ano', date.today().year))
@@ -470,46 +399,6 @@ def lista_receitas(request):
     querystring = urlencode({k: v for k, v in request.GET.items() if v and k != 'page'})
 
     contexto = {
-=======
-def lista_receitas(request):
-    receitas = Receita.objects.order_by('-data')
-    q = request.GET.get('q', '').strip()
-    categoria_id = request.GET.get('categoria', '')
-    conta_id = request.GET.get('conta', '')
-    status = request.GET.get('status', '')
-    data = request.GET.get('data', '')
-
-    if q:
-        receitas = receitas.filter(descricao__icontains=q)
-    if categoria_id:
-        receitas = receitas.filter(categoria_id=categoria_id)
-    if conta_id:
-        receitas = receitas.filter(conta_id=conta_id)
-    if status == 'recebido':
-        receitas = receitas.filter(recebido=True)
-    elif status == 'pendente':
-        receitas = receitas.filter(recebido=False)
-    if data:
-        dt = None
-        try:
-            dt = datetime.strptime(data, '%d/%m/%Y').date()
-        except Exception:
-            try:
-                # also accept ISO format if present
-                dt = datetime.strptime(data, '%Y-%m-%d').date()
-            except Exception:
-                dt = None
-        if dt:
-            receitas = receitas.filter(data=dt)
-
-    categorias = Categoria.objects.filter(tipo='receita').order_by('nome')
-    contas = Conta.objects.order_by('nome')
-    paginator = Paginator(receitas, 10)
-    page_obj = paginator.get_page(request.GET.get('page'))
-    querystring = urlencode({k: v for k, v in request.GET.items() if v and k != 'page'})
-
-    contexto = {
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
         'receitas': page_obj,
         'categorias': categorias,
         'contas': contas,
@@ -543,18 +432,7 @@ def lista_despesas(request):
     elif status == 'pendente':
         despesas = despesas.filter(pago=False)
     if data:
-<<<<<<< HEAD
         dt = interpretar_data_filtro(data)
-=======
-        dt = None
-        try:
-            dt = datetime.strptime(data, '%d/%m/%Y').date()
-        except Exception:
-            try:
-                dt = datetime.strptime(data, '%Y-%m-%d').date()
-            except Exception:
-                dt = None
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
         if dt:
             despesas = despesas.filter(data=dt)
 
@@ -772,11 +650,7 @@ def excluir_conta(request, conta_id):
             conta.delete()
             return redirect('lista_contas')
         except ProtectedError:
-<<<<<<< HEAD
             erro = 'Esta conta possui receitas ou despesas vinculadas e não pode ser excluída.'
-=======
-            erro = 'Esta conta possui receitas ou despesas vinculadas e nao pode ser excluida.'
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
 
     contexto = {
         'conta': conta,
@@ -853,11 +727,7 @@ def excluir_categoria(request, categoria_id):
             categoria.delete()
             return redirect('lista_categorias')
         except ProtectedError:
-<<<<<<< HEAD
             erro = 'Esta categoria possui receitas ou despesas vinculadas e não pode ser excluída.'
-=======
-            erro = 'Esta categoria possui receitas ou despesas vinculadas e nao pode ser excluida.'
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
 
     contexto = {
         'categoria': categoria,
@@ -877,7 +747,6 @@ def lista_emprestimos_cartao(request):
     if cartao_id:
         emprestimos = emprestimos.filter(cartao_utilizado_id=cartao_id)
 
-<<<<<<< HEAD
     querystring = urlencode({k: v for k, v in request.GET.items() if v and k != 'page'})
 
     emprestimos_filtrados_ids = emprestimos.values_list('id', flat=True)
@@ -906,39 +775,16 @@ def lista_emprestimos_cartao(request):
         emprestimo_id__in=emprestimos_filtrados_ids,
         pago=False,
     ).aggregate(total=Sum('valor'))['total'] or 0
-=======
-    parcelas = ParcelaEmprestimo.objects.select_related('emprestimo', 'emprestimo__cartao_utilizado', 'emprestimo__conta_recebimento').order_by('vencimento', 'emprestimo__pessoa', 'numero')
-    if status == 'pago':
-        parcelas = parcelas.filter(pago=True)
-    elif status == 'pendente':
-        parcelas = parcelas.filter(pago=False)
-
-    paginator = Paginator(parcelas, 10)
-    parcelas_page = paginator.get_page(request.GET.get('page'))
-    querystring = urlencode({k: v for k, v in request.GET.items() if v and k != 'page'})
-
-    total_emprestado = emprestimos.aggregate(total=Sum('valor_total'))['total'] or 0
-    total_pago = ParcelaEmprestimo.objects.filter(pago=True).aggregate(total=Sum('valor'))['total'] or 0
-    total_pendente = ParcelaEmprestimo.objects.filter(pago=False).aggregate(total=Sum('valor'))['total'] or 0
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
     cartoes = Conta.objects.filter(possui_cartao_credito=True).order_by('nome')
 
     contexto = {
         'emprestimos': emprestimos,
-<<<<<<< HEAD
         'parcelas_pendentes': parcelas_pendentes,
         'parcelas_pagas': parcelas_pagas,
-=======
-        'parcelas': parcelas_page,
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
         'total_emprestado': total_emprestado,
         'total_pago': total_pago,
         'total_pendente': total_pendente,
         'cartoes': cartoes,
-<<<<<<< HEAD
-=======
-        'page_obj': parcelas_page,
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
         'querystring': querystring,
         'filtro_q': q,
         'filtro_cartao': cartao_id,
@@ -969,21 +815,17 @@ def novo_emprestimo_cartao(request):
 
 def editar_emprestimo_cartao(request, emprestimo_id):
     emprestimo = get_object_or_404(EmprestimoCartao, id=emprestimo_id)
-<<<<<<< HEAD
     campos_que_recalculam_parcelas = {
         'cartao_utilizado',
         'valor_total',
         'quantidade_parcelas',
         'data_compra',
     }
-=======
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
 
     if request.method == 'POST':
         form = EmprestimoCartaoForm(request.POST, instance=emprestimo)
 
         if form.is_valid():
-<<<<<<< HEAD
             tem_parcela_paga = emprestimo.parcelas.filter(pago=True).exists()
             deve_recalcular = bool(campos_que_recalculam_parcelas.intersection(form.changed_data))
 
@@ -998,20 +840,14 @@ def editar_emprestimo_cartao(request, emprestimo_id):
                 }
                 return render(request, 'financeiro/form_emprestimo_cartao.html', contexto)
 
-=======
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
             emprestimo = form.save(commit=False)
             emprestimo.banco = emprestimo.cartao_utilizado.nome
             emprestimo.dia_vencimento_cartao = emprestimo.cartao_utilizado.dia_vencimento_fatura
             emprestimo.save()
-<<<<<<< HEAD
 
             if deve_recalcular:
                 gerar_parcelas_emprestimo(emprestimo)
 
-=======
-            gerar_parcelas_emprestimo(emprestimo)
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
             return redirect('lista_emprestimos_cartao')
     else:
         form = EmprestimoCartaoForm(instance=emprestimo)
@@ -1055,20 +891,12 @@ def alternar_pagamento_parcela(request, parcela_id):
                 return redirect('lista_emprestimos_cartao')
 
             categoria, _ = Categoria.objects.get_or_create(
-<<<<<<< HEAD
                 nome='Pagamento cartão emprestado',
-=======
-                nome='Pagamento cartao emprestado',
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
                 tipo='receita'
             )
 
             receita = Receita.objects.create(
-<<<<<<< HEAD
                 descricao=f'Pagamento cartão - {parcela.emprestimo.pessoa} ({parcela.numero}/{parcela.emprestimo.quantidade_parcelas})',
-=======
-                descricao=f'Pagamento cartao - {parcela.emprestimo.pessoa} ({parcela.numero}/{parcela.emprestimo.quantidade_parcelas})',
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
                 valor=parcela.valor,
                 data=date.today(),
                 categoria=categoria,

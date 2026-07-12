@@ -1,4 +1,4 @@
-:root {
+﻿:root {
     --bg: #eef2f7;
     --surface: #ffffff;
     --surface-soft: #f8fafc;
@@ -29,11 +29,7 @@ body {
 
 .app-shell {
     display: grid;
-<<<<<<< HEAD
     grid-template-columns: 290px 1fr;
-=======
-    grid-template-columns: 250px 1fr;
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
     min-height: 100vh;
 }
 
@@ -919,7 +915,6 @@ tr:hover td {
 }
 
 .panel.wide-panel {
-<<<<<<< HEAD
     position: relative;
     border-left: 0;
     border: 1px solid rgba(14, 165, 164, 0.14);
@@ -943,9 +938,6 @@ tr:hover td {
 .dashboard-hero.panel.wide-panel {
     padding: 18px;
     border-radius: 24px;
-=======
-    border-left: 4px solid #2563eb;
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
 }
 
 .panel.wide-panel h2 {
@@ -1064,15 +1056,7 @@ input[type="number"]::placeholder {
 
 input[type="number"].currency,
 input[type="text"].currency {
-<<<<<<< HEAD
     background-color: rgba(37, 99, 235, 0.04);
-=======
-    background: rgba(37, 99, 235, 0.04);
-    border-color: rgba(37, 99, 235, 0.35);
-    /* Small SVG prefix with R$ rendered as background */
-        padding-left: 44px;
-    }
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
     padding-right: 18px;
 }
 
@@ -1272,7 +1256,6 @@ textarea {
         grid-template-columns: 1fr;
     }
 }
-<<<<<<< HEAD
 
 /* Dashboard hero: highlight moderno sem borda lateral */
 .dashboard-hero-shell {
@@ -3295,5 +3278,3 @@ body::-webkit-scrollbar-track,
     background: rgba(203, 213, 225, 0.72);
     background-clip: padding-box;
 }
-=======
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e

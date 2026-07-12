@@ -1,10 +1,9 @@
-{% extends 'financeiro/base.html' %}
+﻿{% extends 'financeiro/base.html' %}
 
 {% block title %}Painel Financeiro - Visão Geral{% endblock %}
 {% block page_title %}Painel Financeiro{% endblock %}
 {% block page_subtitle %}Visão geral das receitas, despesas, saldos e parcelas pendentes no mês atual.{% endblock %}
 
-<<<<<<< HEAD
 {% block page_actions %}
 <form method="get" class="period-form dashboard-period-form" data-auto-submit-period>
     <label for="mes">Período</label>
@@ -39,33 +38,13 @@
         <p class="balance-card-text">Receitas recebidas menos despesas pagas no mês selecionado. O saldo total das contas aparece nos cards ao lado.</p>
         {% if saldo_variacao_percent %}
             <div class="balance-variation {{ saldo_variacao_class }}">
-=======
-{% block page_actions %}{% endblock %}
-
-{% block content %}
-{% load currency_tags %}
-<section class="panel wide-panel dashboard-hero">
-    <section class="hero-card">
-        <div class="hero-card-title">Saldo atual</div>
-        <div class="hero-card-value {% if saldo < 0 %}negative{% else %}positive{% endif %}">
-            <span class="balance-indicator" aria-hidden="true">{% if saldo < 0 %}▼{% else %}▲{% endif %}</span>
-            {{ saldo|format_brl }}
-        </div>
-        <p class="hero-card-text">Saldo consolidado das contas após receitas e despesas. Receitas e despesas têm peso semelhante neste painel.</p>
-        {% if saldo_variacao_percent %}
-            <div class="hero-variation {{ saldo_variacao_class }}">
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
                 {{ saldo_variacao_percent }}% vs mês anterior
                 <span class="tooltip-icon" tabindex="0">ⓘ
                     <span class="tooltip-popup">Calculado como receitas recebidas menos despesas pagas no mês atual comparado ao mês anterior.</span>
                 </span>
             </div>
         {% else %}
-<<<<<<< HEAD
             <div class="balance-variation {{ saldo_variacao_class }}">
-=======
-            <div class="hero-variation {{ saldo_variacao_class }}">
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
                 Variação: {{ saldo_variacao_change|format_brl }} vs mês anterior
                 <span class="tooltip-icon" tabindex="0">ⓘ
                     <span class="tooltip-popup">Calculado como receitas recebidas menos despesas pagas no mês atual comparado ao mês anterior.</span>
@@ -73,7 +52,6 @@
             </div>
         {% endif %}
     </section>
-<<<<<<< HEAD
 
     <section class="hero-summary">
         <div class="summary-card primary">
@@ -197,77 +175,6 @@
     </div>
     <div class="grid dashboard-grid">
     <section class="panel dashboard-box dashboard-box-income">
-=======
-
-    <section class="hero-summary">
-        <div class="summary-card primary">
-            <span>VALOR TOTAL DAS FATURAS</span>
-            <strong>{{ total_faturas_cartao|format_brl }}</strong>
-        </div>
-        <div class="summary-card positive">
-            <span>Receitas recebidas</span>
-            <strong>{{ total_receitas|format_brl }}</strong>
-        </div>
-        <div class="summary-card negative">
-            <span>Despesas pagas</span>
-            <strong>{{ total_despesas|format_brl }}</strong>
-        </div>
-        <div class="summary-card warning">
-            <span>Cartao pendente no mes</span>
-            <strong>{{ total_cartao_mes_pendente|format_brl }}</strong>
-        </div>
-        <div class="summary-card">
-            <span>Saldo total das contas</span>
-            <strong>{{ saldo_total_contas|format_brl }}</strong>
-        </div>
-        <div class="summary-card neutral">
-            <span>Contas cadastradas</span>
-            <strong>{{ contas|length }}</strong>
-        </div>
-    </section>
-</section>
-
-<section class="cards top-cards">
-    {% for item in contas_com_saldo %}
-    <article class="card account-card">
-        <a href="/contas/{{ item.conta.id }}/editar/" class="account-card-link">
-            <div class="account-card-head">
-                <h3>{{ item.conta.nome }}</h3>
-                <span class="account-type">{{ item.conta.get_tipo_display }}</span>
-            </div>
-
-            <div class="account-line">
-                <span>Saldo inicial</span>
-                <strong>{{ item.conta.saldo_inicial|format_brl }}</strong>
-            </div>
-            <div class="account-line">
-                <span>Receitas pagas</span>
-                <strong class="positive">{{ item.total_receitas|format_brl }}</strong>
-            </div>
-            <div class="account-line">
-                <span>Despesas pagas</span>
-                <strong class="negative">{{ item.total_despesas|format_brl }}</strong>
-            </div>
-            <div class="account-line">
-                <span>Saldo atual</span>
-                <strong class="account-balance">{{ item.saldo_atual|format_brl }}</strong>
-            </div>
-            <div class="account-line">
-                <span>Cartão de crédito</span>
-                <strong>{% if item.conta.possui_cartao_credito %}Sim{% else %}Não{% endif %}</strong>
-            </div>
-        </a>
-    </article>
-    {% empty %}
-    <section class="panel">
-        <p class="empty">Nenhuma conta cadastrada.</p>
-    </section>
-    {% endfor %}
-</section>
-
-<div class="grid dashboard-grid">
-    <section class="panel">
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
         <h2>Últimas receitas lançadas</h2>
         <div class="table-wrap">
             <table>
@@ -291,11 +198,7 @@
         </div>
     </section>
 
-<<<<<<< HEAD
     <section class="panel dashboard-box dashboard-box-expense">
-=======
-    <section class="panel">
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
         <h2>Últimas despesas lançadas</h2>
         <div class="table-wrap">
             <table>
@@ -319,20 +222,12 @@
         </div>
     </section>
 
-<<<<<<< HEAD
     <section class="panel dashboard-box dashboard-box-income-pending">
-=======
-    <section class="panel">
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
         <h2>Receitas pendentes a receber</h2>
         <div class="table-wrap">
             <table>
                 <tr>
-<<<<<<< HEAD
                     <th>Descrição</th>
-=======
-                    <th>Descricao</th>
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
                     <th>Valor</th>
                     <th>Data</th>
                 </tr>
@@ -351,20 +246,12 @@
         </div>
     </section>
 
-<<<<<<< HEAD
     <section class="panel dashboard-box dashboard-box-expense-pending">
-=======
-    <section class="panel">
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
         <h2>Despesas pendentes de pagamento</h2>
         <div class="table-wrap">
             <table>
                 <tr>
-<<<<<<< HEAD
                     <th>Descrição</th>
-=======
-                    <th>Descricao</th>
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
                     <th>Valor</th>
                     <th>Data</th>
                 </tr>
@@ -383,7 +270,6 @@
         </div>
     </section>
 
-<<<<<<< HEAD
     <section class="panel wide-panel dashboard-box dashboard-box-card">
         <div class="panel-header">
             <div>
@@ -403,19 +289,11 @@
             <div class="empty open-person-empty">Nenhuma pessoa com parcela em aberto neste período.</div>
             {% endfor %}
         </div>
-=======
-    <section class="panel wide-panel">
-        <h2>Parcelas pendentes de cartão (mês atual)</h2>
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
         <div class="table-wrap">
             <table>
                 <tr>
                     <th>Pessoa</th>
-<<<<<<< HEAD
                     <th>Cartão</th>
-=======
-                    <th>Cartao</th>
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
                     <th>Parcela</th>
                     <th>Valor</th>
                     <th>Vencimento</th>
@@ -444,7 +322,6 @@
                 </tr>
                 {% empty %}
                 <tr>
-<<<<<<< HEAD
                     <td colspan="6" class="empty">Nenhuma parcela pendente do cartão neste mês.</td>
                 </tr>
                 {% endfor %}
@@ -494,16 +371,12 @@
                 {% empty %}
                 <tr>
                     <td colspan="6" class="empty">Nenhuma parcela de cartão recebida neste mês.</td>
-=======
-                    <td colspan="6" class="empty">Nenhuma parcela pendente do cartao neste mes.</td>
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
                 </tr>
                 {% endfor %}
             </table>
         </div>
     </section>
 </div>
-<<<<<<< HEAD
 </section>
 {% endblock %}
 
@@ -520,6 +393,4 @@ document.addEventListener('DOMContentLoaded', function(){
     });
 });
 </script>
-=======
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
 {% endblock %}

@@ -1,4 +1,4 @@
-from django.contrib import admin
+﻿from django.contrib import admin
 from .models import (
     Categoria,
     Conta,
@@ -18,11 +18,7 @@ class CategoriaAdmin(admin.ModelAdmin):
 
 @admin.register(Conta)
 class ContaAdmin(admin.ModelAdmin):
-<<<<<<< HEAD
     list_display = ('nome', 'tipo', 'saldo_inicial', 'possui_cartao_credito', 'dias_antes_fechamento_fatura', 'dia_vencimento_fatura')
-=======
-    list_display = ('nome', 'tipo', 'saldo_inicial', 'possui_cartao_credito', 'dia_fechamento_fatura', 'dia_vencimento_fatura')
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
     list_filter = ('tipo', 'possui_cartao_credito')
     search_fields = ('nome',)
 

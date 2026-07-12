@@ -1,5 +1,4 @@
-from django import forms
-<<<<<<< HEAD
+﻿from django import forms
 from decimal import Decimal, InvalidOperation
 from datetime import date, datetime
 from .models import Receita, Despesa, Conta, Categoria, EmprestimoCartao
@@ -84,9 +83,6 @@ def parse_data_brl(value):
 class BRLDateField(forms.DateField):
     def to_python(self, value):
         return super().to_python(parse_data_brl(value))
-=======
-from .models import Receita, Despesa, Conta, Categoria, EmprestimoCartao
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
 
 
 class ReceitaForm(forms.ModelForm):
@@ -95,18 +91,11 @@ class ReceitaForm(forms.ModelForm):
         fields = ['descricao', 'valor', 'data', 'categoria', 'conta', 'recebido']
         widgets = {
             'data': forms.TextInput(attrs={'class': 'date-mask', 'placeholder': 'DD/MM/YYYY'}),
-<<<<<<< HEAD
             'valor': forms.TextInput(attrs={
                 'inputmode': 'decimal',
                 'placeholder': '0,00',
                 'class': 'currency',
                 'autocomplete': 'off',
-=======
-            'valor': forms.NumberInput(attrs={
-                'step': '0.01',
-                'placeholder': '0,00',
-                'class': 'currency',
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
             }),
         }
         help_texts = {
@@ -131,7 +120,6 @@ class DespesaForm(forms.ModelForm):
         fields = ['descricao', 'valor', 'data', 'categoria', 'conta', 'pago']
         widgets = {
             'data': forms.TextInput(attrs={'class': 'date-mask', 'placeholder': 'DD/MM/YYYY'}),
-<<<<<<< HEAD
             'valor': forms.TextInput(attrs={
                 'inputmode': 'decimal',
                 'placeholder': '0,00',
@@ -153,14 +141,6 @@ class DespesaForm(forms.ModelForm):
 
     def clean_valor(self):
         return parse_valor_brl(self.cleaned_data.get('valor'))
-=======
-            'valor': forms.NumberInput(attrs={
-                'step': '0.01',
-                'placeholder': '0,00',
-                'class': 'currency',
-            }),
-        }
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
 
 class ContaForm(forms.ModelForm):
     class Meta:
@@ -170,7 +150,6 @@ class ContaForm(forms.ModelForm):
             'tipo',
             'saldo_inicial',
             'possui_cartao_credito',
-<<<<<<< HEAD
             'dias_antes_fechamento_fatura',
             'dia_vencimento_fatura',
         ]
@@ -182,18 +161,6 @@ class ContaForm(forms.ModelForm):
                 'autocomplete': 'off',
             }),
             'dias_antes_fechamento_fatura': forms.NumberInput(attrs={
-=======
-            'dia_fechamento_fatura',
-            'dia_vencimento_fatura',
-        ]
-        widgets = {
-            'saldo_inicial': forms.NumberInput(attrs={
-                'step': '0.01',
-                'placeholder': '0,00',
-                'class': 'currency',
-            }),
-            'dia_fechamento_fatura': forms.NumberInput(attrs={
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
                 'min': '1',
                 'max': '31',
                 'placeholder': '5',
@@ -208,7 +175,6 @@ class ContaForm(forms.ModelForm):
             'nome': 'Nome',
             'tipo': 'Tipo',
             'saldo_inicial': 'Saldo inicial',
-<<<<<<< HEAD
             'possui_cartao_credito': 'Possui cartão de crédito?',
             'dias_antes_fechamento_fatura': 'Dias antes do vencimento da fatura',
             'dia_vencimento_fatura': 'Dia que vence a fatura',
@@ -222,49 +188,27 @@ class ContaForm(forms.ModelForm):
 
     def clean_saldo_inicial(self):
         return parse_valor_brl(self.cleaned_data.get('saldo_inicial'))
-=======
-            'possui_cartao_credito': 'Possui cartao de credito?',
-            'dia_fechamento_fatura': 'Dias antes do vencimento da fatura',
-            'dia_vencimento_fatura': 'Dia que vence a fatura',
-        }
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
 
     def clean(self):
         cleaned_data = super().clean()
         possui_cartao = cleaned_data.get('possui_cartao_credito')
-<<<<<<< HEAD
         dias_antes_vencimento = cleaned_data.get('dias_antes_fechamento_fatura')
-=======
-        dias_antes_vencimento = cleaned_data.get('dia_fechamento_fatura')
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
         dia_vencimento = cleaned_data.get('dia_vencimento_fatura')
 
         if possui_cartao:
             if not dias_antes_vencimento:
-<<<<<<< HEAD
                 self.add_error('dias_antes_fechamento_fatura', 'Informe quantos dias antes do vencimento a fatura fecha.')
-=======
-                self.add_error('dia_fechamento_fatura', 'Informe quantos dias antes do vencimento a fatura fecha.')
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
             if not dia_vencimento:
                 self.add_error('dia_vencimento_fatura', 'Informe o dia de vencimento da fatura.')
 
             for campo, valor in [
-<<<<<<< HEAD
                 ('dias_antes_fechamento_fatura', dias_antes_vencimento),
-=======
-                ('dia_fechamento_fatura', dias_antes_vencimento),
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
                 ('dia_vencimento_fatura', dia_vencimento),
             ]:
                 if valor and (valor < 1 or valor > 31):
                     self.add_error(campo, 'Informe um valor entre 1 e 31.')
         else:
-<<<<<<< HEAD
             cleaned_data['dias_antes_fechamento_fatura'] = None
-=======
-            cleaned_data['dia_fechamento_fatura'] = None
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
             cleaned_data['dia_vencimento_fatura'] = None
 
         return cleaned_data
@@ -273,13 +217,10 @@ class CategoriaForm(forms.ModelForm):
     class Meta:
         model = Categoria
         fields = ['nome', 'tipo']
-<<<<<<< HEAD
         labels = {
             'nome': 'Nome',
             'tipo': 'Tipo',
         }
-=======
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
 
 
 class EmprestimoCartaoForm(forms.ModelForm):
@@ -305,18 +246,11 @@ class EmprestimoCartaoForm(forms.ModelForm):
         ]
         widgets = {
             'data_compra': forms.TextInput(attrs={'class': 'date-mask', 'placeholder': 'DD/MM/YYYY'}),
-<<<<<<< HEAD
             'valor_total': forms.TextInput(attrs={
                 'inputmode': 'decimal',
                 'placeholder': '0,00',
                 'class': 'currency',
                 'autocomplete': 'off',
-=======
-            'valor_total': forms.NumberInput(attrs={
-                'step': '0.01',
-                'placeholder': '0,00',
-                'class': 'currency',
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
             }),
             'quantidade_parcelas': forms.NumberInput(attrs={
                 'min': '1',
@@ -325,7 +259,6 @@ class EmprestimoCartaoForm(forms.ModelForm):
         }
         labels = {
             'pessoa': 'Pessoa',
-<<<<<<< HEAD
             'cartao_utilizado': 'Cartão utilizado',
             'conta_recebimento': 'Conta de recebimento',
             'descricao': 'Descrição',
@@ -345,16 +278,6 @@ class EmprestimoCartaoForm(forms.ModelForm):
 
     def clean_valor_total(self):
         return parse_valor_brl(self.cleaned_data.get('valor_total'))
-=======
-            'cartao_utilizado': 'Cartao utilizado',
-            'conta_recebimento': 'Conta recebimento',
-            'descricao': 'Descricao',
-            'valor_total': 'Valor total',
-            'quantidade_parcelas': 'Quantidade de parcelas',
-            'data_compra': 'Data da compra',
-            'observacao': 'Observacao',
-        }
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
 
     def clean_quantidade_parcelas(self):
         quantidade = self.cleaned_data['quantidade_parcelas']

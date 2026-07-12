@@ -1,4 +1,4 @@
-{% extends 'financeiro/base.html' %}
+﻿{% extends 'financeiro/base.html' %}
 
 {% block title %}Conta{% endblock %}
 {% block page_title %}{% if conta %}Editar Conta{% else %}Nova Conta{% endif %}{% endblock %}
@@ -41,15 +41,9 @@
 
         <div id="cartao-fields" class="nested-fields">
             <p>
-<<<<<<< HEAD
                 {{ form.dias_antes_fechamento_fatura.label_tag }}
                 {{ form.dias_antes_fechamento_fatura }}
                 {{ form.dias_antes_fechamento_fatura.errors }}
-=======
-                {{ form.dia_fechamento_fatura.label_tag }}
-                {{ form.dia_fechamento_fatura }}
-                {{ form.dia_fechamento_fatura.errors }}
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
                 <small class="form-help">Informe quantos dias antes do vencimento a fatura fecha. Ex: vencimento dia 7, fechamento 5 dias antes.</small>
             </p>
 
