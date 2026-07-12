@@ -1,80 +1,23 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Nova Receita</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f6f8;
-            margin: 0;
-            padding: 30px;
-            color: #222;
-        }
+{% extends 'financeiro/base.html' %}
 
-        .container {
-            background: white;
-            max-width: 640px;
-            padding: 24px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
+{% block title %}Receita{% endblock %}
+{% block page_title %}{% if receita %}Editar Receita{% else %}Nova Receita{% endif %}{% endblock %}
+{% block page_subtitle %}Registre ou atualize uma entrada financeira.{% endblock %}
 
-        label {
-            display: block;
-            font-weight: bold;
-            margin-top: 14px;
-            margin-bottom: 6px;
-        }
+{% block page_actions %}
+    <a href="/receitas/" class="btn btn-light"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></span>Voltar</a>
+{% endblock %}
 
-        input, select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            font-size: 15px;
-        }
+{% block content %}
+<section class="form-card">
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
 
-        input[type="checkbox"] {
-            width: auto;
-        }
-
-        .acoes {
-            margin-top: 20px;
-            display: flex;
-            gap: 12px;
-        }
-
-        .botao {
-            border: none;
-            text-decoration: none;
-            background: #1f2937;
-            color: white;
-            padding: 10px 14px;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .positivo-bg {
-            background: #16803c;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Nova Receita</h1>
-
-        <form method="post">
-            {% csrf_token %}
-
-            {{ form.as_p }}
-
-            <div class="acoes">
-                <button type="submit" class="botao positivo-bg">Salvar Receita</button>
-                <a href="/receitas/" class="botao">Cancelar</a>
-            </div>
-        </form>
-    </div>
-</body>
-</html>
+        <div class="actions">
+            <button type="submit" class="btn btn-success"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></span>Salvar Receita</button>
+            <a href="/receitas/" class="btn btn-light"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"></path><path d="M6 6l12 12"></path></svg></span>Cancelar</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

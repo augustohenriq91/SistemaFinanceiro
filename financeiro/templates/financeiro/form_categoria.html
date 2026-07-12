@@ -1,0 +1,23 @@
+{% extends 'financeiro/base.html' %}
+
+{% block title %}Categoria{% endblock %}
+{% block page_title %}{% if categoria %}Editar Categoria{% else %}Nova Categoria{% endif %}{% endblock %}
+{% block page_subtitle %}Organize seus lançamentos por finalidade.{% endblock %}
+
+{% block page_actions %}
+    <a href="/categorias/" class="btn btn-light"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></span>Voltar</a>
+{% endblock %}
+
+{% block content %}
+<section class="form-card">
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <div class="actions">
+            <button type="submit" class="btn btn-success"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></span>Salvar Categoria</button>
+            <a href="/categorias/" class="btn btn-light"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"></path><path d="M6 6l12 12"></path></svg></span>Cancelar</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

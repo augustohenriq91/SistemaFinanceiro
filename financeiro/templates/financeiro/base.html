@@ -1,0 +1,107 @@
+{% load static currency_tags %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Sistema Financeiro{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'financeiro/styles.css' %}">
+    <script src="{% static 'financeiro/money-mask.js' %}"></script>
+</head>
+<body>
+    <div class="app-shell">
+        <aside class="sidebar">
+            <div class="sidebar-main">
+                <div class="brand-block">
+                    <div class="brand-mark">FP</div>
+                    <div>
+                        <div class="brand">Financeiro Pessoal</div>
+                        <div class="brand-subtitle">Controle simples e organizado</div>
+                    </div>
+                    {% if request.user.is_authenticated %}
+                        {% with nome_usuario=request.user.get_full_name %}
+                            <div class="brand-user">
+                                <span>Logado como</span>
+                                <strong>{% if nome_usuario %}{{ nome_usuario }}{% else %}{{ request.user.username }}{% endif %}</strong>
+                            </div>
+                        {% endwith %}
+                    {% endif %}
+                </div>
+
+            <nav class="nav">
+                <a href="/">Dashboard</a>
+                <a href="/receitas/">Receitas</a>
+                <a href="/despesas/">Despesas</a>
+                <a href="/contas/">Contas</a>
+                <a href="/categorias/">Categorias</a>
+                <a href="/cartao-emprestado/">Cartão de Crédito</a>
+                <a href="/relatorios/">Relatórios</a>
+                <a href="/backup/">Backup</a>
+            </nav>
+            </div>
+
+            <div class="sidebar-footer">
+                <a href="/admin/" class="admin-link">Admin</a>
+                <form method="post" action="{% url 'logout' %}" class="logout-form">
+                    {% csrf_token %}
+                    <button type="submit" class="admin-link logout-link">Sair</button>
+                </form>
+            </div>
+        </aside>
+
+        <main class="content">
+            <header class="page-header">
+                <div>
+                    <h1 class="page-title">{% block page_title %}{% endblock %}</h1>
+                    <p class="page-subtitle">{% block page_subtitle %}{% endblock %}</p>
+                </div>
+                <div class="actions">
+                    <button id="theme-toggle" class="btn btn-light btn-small" aria-pressed="false" title="Alternar tema">🌙</button>
+                    {% block page_actions %}{% endblock %}
+                </div>
+            </header>
+
+            {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="alert-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <script>
+    (function(){
+        var key = 'site_theme_v1';
+        var root = document.documentElement;
+        var btn = null;
+        function applyTheme(t){
+            if(t === 'dark') root.setAttribute('data-theme','dark');
+            else root.removeAttribute('data-theme');
+            if(!btn) btn = document.getElementById('theme-toggle');
+            if(btn) btn.setAttribute('aria-pressed', t === 'dark');
+        }
+        try{ var stored = localStorage.getItem(key); if(stored) applyTheme(stored); }
+        catch(e){}
+        document.addEventListener('DOMContentLoaded', function(){
+            btn = document.getElementById('theme-toggle');
+            if(!btn) return;
+            btn.addEventListener('click', function(){
+                var isDark = root.getAttribute('data-theme') === 'dark';
+                var next = isDark ? 'light' : 'dark';
+                applyTheme(next);
+                try{ localStorage.setItem(key, next); }catch(e){}
+            });
+        });
+    })();
+    </script>
+    {% block extra_js %}{% endblock %}
+
+</body>
+</html>

@@ -1,0 +1,103 @@
+{% extends 'financeiro/base.html' %}
+{% load currency_tags %}
+
+{% block title %}Relatórios{% endblock %}
+{% block page_title %}Relatórios{% endblock %}
+{% block page_subtitle %}Analise receitas, despesas, categorias e saldo por período.{% endblock %}
+
+{% block content %}
+<section class="panel period-panel">
+    <form method="get" class="period-form">
+        <label for="ano">Ano do relatório</label>
+        <select name="ano" id="ano" class="filter-select">
+            {% for item in anos %}
+                <option value="{{ item }}" {% if ano == item %}selected{% endif %}>{{ item }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-primary">Atualizar</button>
+    </form>
+</section>
+
+<div class="cards stats-cards">
+    <div class="card">
+        <div class="card-label">Receitas no ano</div>
+        <div class="card-value positive">{{ total_receitas|format_brl }}</div>
+    </div>
+    <div class="card">
+        <div class="card-label">Despesas no ano</div>
+        <div class="card-value negative">{{ total_despesas|format_brl }}</div>
+    </div>
+    <div class="card">
+        <div class="card-label">Saldo anual</div>
+        <div class="card-value {% if saldo_anual < 0 %}negative{% else %}positive{% endif %}">{{ saldo_anual|format_brl }}</div>
+    </div>
+</div>
+
+<section class="panel dashboard-box dashboard-box-card">
+    <h2>Resumo mensal</h2>
+    <div class="table-wrap">
+        <table>
+            <tr>
+                <th>Mês</th>
+                <th>Receitas</th>
+                <th>Despesas</th>
+                <th>Saldo</th>
+            </tr>
+            {% for linha in linhas_mensais %}
+            <tr>
+                <td>{{ linha.mes }}</td>
+                <td class="positive">{{ linha.receitas|format_brl }}</td>
+                <td class="negative">{{ linha.despesas|format_brl }}</td>
+                <td class="{% if linha.saldo < 0 %}negative{% else %}positive{% endif %}">{{ linha.saldo|format_brl }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</section>
+
+<div class="grid dashboard-grid">
+    <section class="panel dashboard-box dashboard-box-income">
+        <h2>Receitas por categoria</h2>
+        <div class="table-wrap">
+            <table>
+                <tr>
+                    <th>Categoria</th>
+                    <th>Total</th>
+                </tr>
+                {% for item in receitas_por_categoria %}
+                <tr>
+                    <td>{{ item.categoria }}</td>
+                    <td class="positive">{{ item.total|format_brl }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="2" class="empty">Nenhuma receita no ano selecionado.</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </section>
+
+    <section class="panel dashboard-box dashboard-box-expense">
+        <h2>Despesas por categoria</h2>
+        <div class="table-wrap">
+            <table>
+                <tr>
+                    <th>Categoria</th>
+                    <th>Total</th>
+                </tr>
+                {% for item in despesas_por_categoria %}
+                <tr>
+                    <td>{{ item.categoria }}</td>
+                    <td class="negative">{{ item.total|format_brl }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="2" class="empty">Nenhuma despesa no ano selecionado.</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}
