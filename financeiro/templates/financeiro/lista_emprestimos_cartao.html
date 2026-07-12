@@ -1,22 +1,38 @@
 {% extends 'financeiro/base.html' %}
 {% load currency_tags %}
 
+<<<<<<< HEAD
 {% block title %}Cartão de Crédito{% endblock %}
 {% block page_title %}Cartão de Crédito{% endblock %}
 {% block page_subtitle %}Controle quem usou seu cartão, o valor, o cartão utilizado e o pagamento das parcelas.{% endblock %}
 
 {% block page_actions %}
     <a href="/cartao-emprestado/novo/" class="btn btn-success"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></span>Adicionar Compra</a>
+=======
+{% block title %}Gasto com cartões{% endblock %}
+{% block page_title %}Gasto com cartões{% endblock %}
+{% block page_subtitle %}Controle quem usou seu cartao, o valor, o cartao utilizado e o pagamento das parcelas.{% endblock %}
+
+{% block page_actions %}
+    <a href="/cartao-emprestado/novo/" class="btn btn-success"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></span>Adicionar gasto com cartões</a>
+>>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
 {% endblock %}
 
 {% block content %}
 <section class="panel panel--glass">
     <div class="panel-header">
         <div>
+<<<<<<< HEAD
             <h2 class="panel-title">Filtrar Cartão de Crédito</h2>
             <p class="panel-description">Use os controles abaixo para encontrar rapidamente lançamentos, cartões e status de parcelas.</p>
         </div>
         <button type="button" class="btn btn-light btn-small" onclick="document.getElementById('filter-form').classList.toggle('open')"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9v7l4 2v-9z"></path></svg></span>Mostrar filtros</button>
+=======
+            <h2 class="panel-title">Filtrar gastos com cartões</h2>
+            <p class="panel-description">Use os controles abaixo para encontrar rapidamente lançamentos, cartões e status de parcelas.</p>
+        </div>
+        <button type="button" class="btn btn-light btn-small" onclick="document.getElementById('filter-form').classList.toggle('open')">Mostrar filtros</button>
+>>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
     </div>
 
     <form id="filter-form" method="get" class="filter-row open">
@@ -32,7 +48,11 @@
             <option value="pago" {% if filtro_status == 'pago' %}selected{% endif %}>Parcelas pagas</option>
             <option value="pendente" {% if filtro_status == 'pendente' %}selected{% endif %}>Parcelas pendentes</option>
         </select>
+<<<<<<< HEAD
         <button type="submit" class="btn btn-primary"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9v7l4 2v-9z"></path></svg></span>Filtrar</button>
+=======
+        <button type="submit" class="btn btn-primary"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9v7l4 2v-9z"></path></svg></span>Aplicar</button>
+>>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
     </form>
 </section>
 
@@ -55,8 +75,13 @@
     <section class="panel panel--padded">
         <div class="panel-header">
             <div>
+<<<<<<< HEAD
                 <h2 class="panel-title">Compras Lançadas</h2>
                 <p class="panel-description">Lista de compras no cartão com detalhes de parcela, vencimento e fatura.</p>
+=======
+                <h2 class="panel-title">Gastos cadastrados</h2>
+                <p class="panel-description">Lista de gastos no cartão com detalhes de parcela, vencimento e fatura.</p>
+>>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
             </div>
         </div>
 
@@ -64,6 +89,7 @@
             {% for emprestimo in emprestimos %}
             <div class="card loan-card" data-id="{{ emprestimo.id }}">
                 <div class="loan-summary" tabindex="0" role="button" aria-expanded="false">
+<<<<<<< HEAD
                     <div class="loan-card-main">
                         <h3 class="loan-person">
                             <a href="/cartao-emprestado/{{ emprestimo.id }}/editar/" class="loan-edit-link">{{ emprestimo.pessoa }}</a>
@@ -87,10 +113,29 @@
                             <span class="loan-chip">{{ emprestimo.quantidade_parcelas }}x</span>
                             <button type="button" class="btn btn-light btn-small toggle-details" aria-label="Ver detalhes">Detalhes</button>
                         </div>
+=======
+                    <div class="loan-summary-left">
+                        <h3 class="loan-person"><a href="/cartao-emprestado/{{ emprestimo.id }}/editar/" class="loan-edit-link">{{ emprestimo.pessoa }}</a></h3>
+                        <div class="loan-meta">
+                            {% if emprestimo.cartao_utilizado %}
+                                {{ emprestimo.cartao_utilizado.nome }}
+                            {% else %}
+                                {{ emprestimo.banco }}
+                            {% endif %}
+                            | {{ emprestimo.descricao }}
+                        </div>
+                    </div>
+                    <div class="loan-summary-right">
+                        <div class="loan-amount">{{ emprestimo.valor_total|format_brl }}</div>
+                        <div class="loan-parcels">{{ emprestimo.quantidade_parcelas }}x</div>
+                        <div class="loan-date">{{ emprestimo.data_compra|date:"d/m/Y" }}</div>
+                        <button class="btn btn-light btn-small toggle-details" aria-label="Ver detalhes">Detalhes</button>
+>>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
                     </div>
                 </div>
 
                 <div class="loan-details">
+<<<<<<< HEAD
                     <div class="loan-detail-grid">
                         <div class="loan-detail-item">
                             <span>Valor total</span>
@@ -137,13 +182,63 @@
                     </div>
 
                     <div class="actions card-actions loan-detail-actions">
+=======
+                    <div class="account-line">
+                        <span>Valor total</span>
+                        <strong>{{ emprestimo.valor_total|format_brl }}</strong>
+                    </div>
+                    <div class="account-line">
+                        <span>Parcelas</span>
+                        <strong>{{ emprestimo.quantidade_parcelas }}x</strong>
+                    </div>
+                    <div class="account-line">
+                        <span>Data da compra</span>
+                        <strong>{{ emprestimo.data_compra|date:"d/m/Y" }}</strong>
+                    </div>
+                    <div class="account-line">
+                        <span>Fecha a fatura</span>
+                        <strong>
+                            {% if emprestimo.cartao_utilizado %}
+                                {{ emprestimo.cartao_utilizado.dia_fechamento_fatura }} dias antes do vencimento
+                            {% else %}
+                                Nao definido
+                            {% endif %}
+                        </strong>
+                    </div>
+                    <div class="account-line">
+                        <span>Vence a fatura</span>
+                        <strong>
+                            {% if emprestimo.cartao_utilizado %}
+                                Dia {{ emprestimo.cartao_utilizado.dia_vencimento_fatura }}
+                            {% else %}
+                                Dia {{ emprestimo.dia_vencimento_cartao }}
+                            {% endif %}
+                        </strong>
+                    </div>
+                    <div class="account-line">
+                        <span>Receber em</span>
+                        <strong>
+                            {% if emprestimo.conta_recebimento %}
+                                {{ emprestimo.conta_recebimento }}
+                            {% else %}
+                                Nao definido
+                            {% endif %}
+                        </strong>
+                    </div>
+
+                    <div class="actions card-actions">
+>>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
                         <a href="/cartao-emprestado/{{ emprestimo.id }}/editar/" class="btn btn-light btn-small"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path></svg></span>Editar</a>
                         <a href="/cartao-emprestado/{{ emprestimo.id }}/excluir/" class="btn btn-danger btn-small"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg></span>Excluir</a>
                     </div>
                 </div>
             </div>
             {% empty %}
+<<<<<<< HEAD
             <p class="empty">Nenhum empréstimo no cartão cadastrado.</p>
+=======
+            <p class="empty">Nenhum emprestimo no cartao cadastrado.</p>
+>>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
             {% endfor %}
         </div>
     </section>
@@ -152,6 +247,7 @@
         <div class="panel-header">
             <div>
                 <h2 class="panel-title">Parcelas por mês</h2>
+<<<<<<< HEAD
                 <p class="panel-description">Acompanhe separadamente as parcelas pendentes e as que já foram pagas.</p>
             </div>
         </div>
@@ -277,6 +373,70 @@
             </div>
             {% endif %}
         </div>
+=======
+                <p class="panel-description">Acompanhe o vencimento, status e ações de cada parcela do cartão.</p>
+            </div>
+        </div>
+        <div class="table-wrap table-wrap--shadow">
+            <table>
+                <tr>
+                    <th>Mês</th>
+                    <th>Pessoa</th>
+                    <th>Cartão</th>
+                    <th>Parcela</th>
+                    <th>Valor</th>
+                    <th>Receber em</th>
+                    <th>Status</th>
+                    <th>Ação</th>
+                </tr>
+
+                {% for parcela in parcelas %}
+                <tr>
+                    <td>{{ parcela.vencimento|date:"m/Y" }}</td>
+                    <td>{{ parcela.emprestimo.pessoa }}</td>
+                    <td>
+                        {% if parcela.emprestimo.cartao_utilizado %}
+                            {{ parcela.emprestimo.cartao_utilizado.nome }}
+                        {% else %}
+                            {{ parcela.emprestimo.banco }}
+                        {% endif %}
+                    </td>
+                    <td>{{ parcela.numero }}/{{ parcela.emprestimo.quantidade_parcelas }}</td>
+                    <td>{{ parcela.valor|format_brl }}</td>
+                    <td>
+                        {% if parcela.emprestimo.conta_recebimento %}
+                            {{ parcela.emprestimo.conta_recebimento }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if parcela.pago %}
+                            <span class="pill pill-success">Pago</span>
+                        {% else %}
+                            <span class="pill pill-danger">Pendente</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form method="post" action="/cartao-emprestado/parcela/{{ parcela.id }}/pagar/" class="inline-form">
+                            {% csrf_token %}
+                            {% if parcela.pago %}
+                                <button type="submit" class="btn btn-light btn-small"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"></path><path d="M6 6l12 12"></path></svg></span>Marcar pendente</button>
+                            {% else %}
+                                <button type="submit" class="btn btn-success btn-small"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></span>Marcar pago</button>
+                            {% endif %}
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="empty">Nenhuma parcela cadastrada.</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+        {% include 'financeiro/pagination.html' with page_obj=page_obj querystring=querystring %}
+>>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
     </section>
 </div>
 {% endblock %}

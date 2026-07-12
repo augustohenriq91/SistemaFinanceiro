@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 ﻿import datetime
+=======
+import datetime
+>>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
 import os
 import re
 import shutil
@@ -16,27 +20,44 @@ except ImportError:
 
 
 class Command(BaseCommand):
+<<<<<<< HEAD
     help = 'Importa dados da planilha Planilha_mensal.xlsx para o sistema financeiro'
+=======
+    help = 'Limpa o banco, faz backup do SQLite e importa dados da planilha Planilha_mensal.xlsx'
+>>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
 
     def add_arguments(self, parser):
         parser.add_argument(
             '--file',
+<<<<<<< HEAD
             help='Caminho para a planilha Excel. PadrÃ£o: Planilha_mensal.xlsx',
+=======
+            help='Caminho para a planilha Excel. Padrão: Planilha_mensal.xlsx',
+>>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
             default='Planilha_mensal.xlsx',
         )
         parser.add_argument(
             '--sheet',
+<<<<<<< HEAD
             help='Nome da aba com os lanÃ§amentos. PadrÃ£o: Janeiro',
+=======
+            help='Nome da aba com os lançamentos. Padrão: Janeiro',
+>>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
             default='Janeiro',
         )
         parser.add_argument(
             '--all',
             action='store_true',
+<<<<<<< HEAD
             help='Importa todas as abas vÃ¡lidas da planilha Excel',
+=======
+            help='Importa todas as abas válidas da planilha Excel',
+>>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
         )
         parser.add_argument(
             '--noinput',
             action='store_true',
+<<<<<<< HEAD
             help='NÃ£o perguntar antes de limpar o banco',
         )
 
@@ -44,16 +65,24 @@ class Command(BaseCommand):
             '--keep-existing',
             action='store_true',
             help='Importa mantendo os dados atuais. Atencao: se rodar novamente, pode duplicar lancamentos.',
+=======
+            help='Não perguntar antes de limpar o banco',
+>>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
         )
 
     def handle(self, *args, **options):
         if openpyxl is None:
+<<<<<<< HEAD
             self.stderr.write('openpyxl nÃ£o estÃ¡ instalado. Instale com pip install openpyxl')
+=======
+            self.stderr.write('openpyxl não está instalado. Instale com pip install openpyxl')
+>>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
             return
 
         file_path = options['file']
         sheet_name = options['sheet']
         all_sheets = options['all']
+<<<<<<< HEAD
         keep_existing = options['keep_existing']
 
         self.stdout.write(f'Importando planilha: {file_path} ' + ('(todas as abas)' if all_sheets else f'(aba: {sheet_name})'))
@@ -64,19 +93,33 @@ class Command(BaseCommand):
             confirm = input('Isto irÃ¡ limpar Receitas, Despesas, Contas e Categorias. Continuar? [s/N]: ')
             if confirm.lower() not in ('s', 'sim'):
                 self.stdout.write('OperaÃ§Ã£o cancelada.')
+=======
+
+        self.stdout.write(f'Importando planilha: {file_path} ' + ('(todas as abas)' if all_sheets else f'(aba: {sheet_name})'))
+
+        if not options['noinput']:
+            confirm = input('Isto irá limpar Receitas, Despesas, Contas e Categorias. Continuar? [s/N]: ')
+            if confirm.lower() not in ('s', 'sim'):
+                self.stdout.write('Operação cancelada.')
+>>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
                 return
 
         self._backup_database()
 
         wb = openpyxl.load_workbook(file_path, data_only=True)
         with transaction.atomic():
+<<<<<<< HEAD
             if not keep_existing:
                 self._clear_data()
+=======
+            self._clear_data()
+>>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
             self._ensure_default_categories_and_accounts()
 
             if all_sheets:
                 processed = self._process_all_sheets(wb)
                 if processed == 0:
+<<<<<<< HEAD
                     self.stderr.write('Nenhuma aba vÃ¡lida foi importada.')
                     return
             else:
@@ -89,6 +132,20 @@ class Command(BaseCommand):
                     return
 
         self.stdout.write(self.style.SUCCESS('ImportaÃ§Ã£o concluÃ­da.'))
+=======
+                    self.stderr.write('Nenhuma aba válida foi importada.')
+                    return
+            else:
+                if sheet_name not in wb.sheetnames:
+                    self.stderr.write(f'Aba não encontrada: {sheet_name}')
+                    return
+                ws = wb[sheet_name]
+                if not self._process_sheet(ws, sheet_name):
+                    self.stderr.write(f'Aba {sheet_name} não pôde ser importada.')
+                    return
+
+        self.stdout.write(self.style.SUCCESS('Importação concluída.'))
+>>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
 
     def _process_all_sheets(self, wb):
         processed_count = 0
@@ -101,7 +158,11 @@ class Command(BaseCommand):
             if self._process_sheet(ws, sheet_name):
                 processed_count += 1
             else:
+<<<<<<< HEAD
                 self.stdout.write(f'Aba ignorada (sem cabeÃ§alho vÃ¡lido): {sheet_name}')
+=======
+                self.stdout.write(f'Aba ignorada (sem cabeçalho válido): {sheet_name}')
+>>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
         return processed_count
 
     def _should_skip_sheet(self, sheet_name):
@@ -116,7 +177,11 @@ class Command(BaseCommand):
             shutil.copy2(db_path, backup_path)
             self.stdout.write(f'Backup do banco criado em {backup_name}')
         else:
+<<<<<<< HEAD
             self.stdout.write('Arquivo de banco nÃ£o encontrado, pulando backup.')
+=======
+            self.stdout.write('Arquivo de banco não encontrado, pulando backup.')
+>>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
 
     def _clear_data(self):
         self.stdout.write('Limpando dados existentes...')
@@ -128,6 +193,7 @@ class Command(BaseCommand):
         Categoria.objects.all().delete()
 
     def _ensure_default_categories_and_accounts(self):
+<<<<<<< HEAD
         self.stdout.write('Criando contas e categorias padrÃ£o...')
         self.contas = {
             'Mercado Pago': Conta.objects.get_or_create(nome='Mercado Pago', defaults={'tipo': 'banco', 'saldo_inicial': 0})[0],
@@ -143,6 +209,23 @@ class Command(BaseCommand):
             'CartÃµes': Categoria.objects.get_or_create(nome='CartÃµes', tipo='despesa')[0],
             'Investimentos': Categoria.objects.get_or_create(nome='Investimentos', tipo='despesa')[0],
             'Emprestimos': Categoria.objects.get_or_create(nome='Emprestimos', tipo='despesa')[0],
+=======
+        self.stdout.write('Criando contas e categorias padrão...')
+        self.contas = {
+            'Mercado Pago': Conta.objects.create(nome='Mercado Pago', tipo='banco', saldo_inicial=0),
+            'NuBank': Conta.objects.create(nome='NuBank', tipo='banco', saldo_inicial=0),
+            'Inter': Conta.objects.create(nome='Inter', tipo='banco', saldo_inicial=0),
+            'Santander': Conta.objects.create(nome='Santander', tipo='banco', saldo_inicial=0),
+            'Carteira': Conta.objects.create(nome='Carteira', tipo='carteira', saldo_inicial=0),
+        }
+
+        self.categorias = {
+            'Receitas': Categoria.objects.create(nome='Receitas', tipo='receita'),
+            'Despesas': Categoria.objects.create(nome='Despesas', tipo='despesa'),
+            'Cartões': Categoria.objects.create(nome='Cartões', tipo='despesa'),
+            'Investimentos': Categoria.objects.create(nome='Investimentos', tipo='despesa'),
+            'Emprestimos': Categoria.objects.create(nome='Emprestimos', tipo='despesa'),
+>>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
         }
 
     def _process_sheet(self, ws, sheet_name=None):
@@ -150,7 +233,11 @@ class Command(BaseCommand):
         rows = list(ws.iter_rows(values_only=True))
 
         if len(rows) < 16:
+<<<<<<< HEAD
             self.stderr.write('A planilha parece nÃ£o ter linhas suficientes para importar.')
+=======
+            self.stderr.write('A planilha parece não ter linhas suficientes para importar.')
+>>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
             return False
 
         header_line = None
@@ -162,7 +249,11 @@ class Command(BaseCommand):
         if header_line is None:
             return False
 
+<<<<<<< HEAD
         self.stdout.write(f'CabeÃ§alho encontrado na linha {header_line + 1}')
+=======
+        self.stdout.write(f'Cabeçalho encontrado na linha {header_line + 1}')
+>>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
         for row_index, row in enumerate(rows[header_line + 1:], start=header_line + 2):
             if not row or all(cell is None for cell in row):
                 continue
@@ -237,7 +328,11 @@ class Command(BaseCommand):
             data = self._find_date_in_row(row)
 
         if data is None:
+<<<<<<< HEAD
             self.stderr.write(f'Linha extra ignorada sem data vÃ¡lida: {descricao}')
+=======
+            self.stderr.write(f'Linha extra ignorada sem data válida: {descricao}')
+>>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
             return
 
         if 'EMPREST' in descricao_norm:
@@ -371,4 +466,7 @@ class Command(BaseCommand):
             conta=conta,
             recebido=recebido,
         )
+<<<<<<< HEAD
 
+=======
+>>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
