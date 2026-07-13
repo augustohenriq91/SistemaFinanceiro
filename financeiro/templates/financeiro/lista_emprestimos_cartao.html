@@ -22,13 +22,13 @@
     <form id="filter-form" method="get" class="filter-row open">
         <input type="text" name="q" value="{{ filtro_q }}" placeholder="Buscar pessoa" class="filter-input">
         <select name="cartao" class="filter-select">
-            <option value="">Todos cartões</option>
+            <option value="">Todos os cartões</option>
             {% for cartao in cartoes %}
                 <option value="{{ cartao.id }}" {% if filtro_cartao == cartao.id|stringformat:"s" %}selected{% endif %}>{{ cartao.nome }}</option>
             {% endfor %}
         </select>
         <select name="status" class="filter-select">
-            <option value="">Todos status</option>
+            <option value="">Todos os status</option>
             <option value="pago" {% if filtro_status == 'pago' %}selected{% endif %}>Parcelas pagas</option>
             <option value="pendente" {% if filtro_status == 'pendente' %}selected{% endif %}>Parcelas pendentes</option>
         </select>
@@ -38,7 +38,7 @@
 
 <div class="cards stats-cards">
     <div class="card">
-        <div class="card-label">Total emprestado</div>
+        <div class="card-label">Total em compras</div>
         <div class="card-value neutral">{{ total_emprestado|format_brl }}</div>
     </div>
     <div class="card">
@@ -143,7 +143,7 @@
                 </div>
             </div>
             {% empty %}
-            <p class="empty">Nenhum empréstimo no cartão cadastrado.</p>
+            <p class="empty">Nenhuma compra no cartão cadastrada.</p>
             {% endfor %}
         </div>
     </section>

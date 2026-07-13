@@ -70,6 +70,9 @@ body {
 
 .content {
     padding: 28px;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
 .page-header {
@@ -121,6 +124,19 @@ body {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
+}
+
+#theme-toggle {
+    flex: 0 0 54px !important;
+    width: 42px !important;
+    height: 54px !important;
+    min-width: 42px !important;
+    max-width: 42px !important;
+    min-height: 54px !important;
+    max-height: 54px !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+    align-self: center;
 }
 
 .btn,
@@ -1138,7 +1154,8 @@ textarea {
     display: grid;
     grid-template-columns: minmax(280px, 420px) 1fr;
     gap: 20px;
-    align-items: start;
+    align-items: stretch;
+    --card-page-panel-height: min(62vh, 650px);
 }
 
 .loan-list {
@@ -1611,6 +1628,7 @@ section.dashboard-hero-shell > .hero-card::before {
 
 .dashboard-accounts-section {
     min-width: 0;
+    max-width: 100%;
     overflow: hidden;
 }
 
@@ -1618,10 +1636,8 @@ section.dashboard-hero-shell > .hero-card::before {
     width: 100%;
     max-width: 100%;
     min-width: 0;
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: minmax(260px, 300px);
-    grid-template-columns: none;
+    display: flex !important;
+    flex-wrap: nowrap;
     align-items: stretch;
     gap: 16px;
     margin-bottom: 0;
@@ -1633,7 +1649,9 @@ section.dashboard-hero-shell > .hero-card::before {
 }
 
 .top-cards > .account-card {
-    min-width: 0;
+    flex: 0 0 clamp(260px, 18vw, 300px);
+    min-width: 260px;
+    max-width: 300px;
     scroll-snap-align: start;
 }
 
@@ -1648,16 +1666,28 @@ section.dashboard-hero-shell > .hero-card::before {
 .dashboard-section-title span {
     display: inline-flex;
     align-items: center;
-    min-height: 24px;
-    margin-bottom: 5px;
-    padding: 4px 9px;
+    gap: 8px;
+    min-height: 32px;
+    margin-bottom: 8px;
+    padding: 7px 13px;
+    border: 1px solid rgba(20, 184, 166, 0.2);
     border-radius: 999px;
     color: #0f766e;
-    background: rgba(20, 184, 166, 0.1);
-    font-size: 11px;
+    background: linear-gradient(135deg, rgba(20, 184, 166, 0.14), rgba(37, 99, 235, 0.08));
+    box-shadow: 0 10px 22px rgba(15, 118, 110, 0.08);
+    font-size: 12px;
     font-weight: 900;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.09em;
     text-transform: uppercase;
+}
+
+.dashboard-section-title span::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #14b8a6, #2563eb);
+    box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.12);
 }
 
 .dashboard-section-title h2 {
@@ -1807,7 +1837,9 @@ section.dashboard-hero-shell > .hero-card::before {
 
 [data-theme="dark"] .dashboard-section-title span {
     color: #99f6e4;
-    background: rgba(45, 212, 191, 0.12);
+    border-color: rgba(45, 212, 191, 0.18);
+    background: linear-gradient(135deg, rgba(45, 212, 191, 0.16), rgba(37, 99, 235, 0.12));
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.22);
 }
 
 [data-theme="dark"] .dashboard-section-title h2 {
@@ -2231,6 +2263,33 @@ section.dashboard-hero-shell > .hero-card::before {
     color: #f8fafc !important;
 }
 
+[data-theme="dark"] select {
+    color-scheme: dark;
+    background-image:
+        linear-gradient(45deg, transparent 50%, #99f6e4 50%),
+        linear-gradient(135deg, #99f6e4 50%, transparent 50%),
+        linear-gradient(135deg, rgba(45, 212, 191, 0.12), rgba(37, 99, 235, 0.08));
+    background-position:
+        calc(100% - 18px) 50%,
+        calc(100% - 13px) 50%,
+        0 0;
+    background-size:
+        5px 5px,
+        5px 5px,
+        100% 100%;
+    background-repeat: no-repeat;
+}
+
+[data-theme="dark"] select option {
+    background: #0f172a;
+    color: #f8fafc;
+}
+
+[data-theme="dark"] select option:checked {
+    background: #0ea5a4;
+    color: #ecfeff;
+}
+
 [data-theme="dark"] input::placeholder,
 [data-theme="dark"] textarea::placeholder {
     color: #94a3b8;
@@ -2241,7 +2300,13 @@ section.dashboard-hero-shell > .hero-card::before {
 [data-theme="dark"] textarea:focus {
     outline: none;
     border-color: rgba(45, 212, 191, 0.75) !important;
-    box-shadow: 0 0 0 4px rgba(45, 212, 191, 0.13);
+    box-shadow: 0 0 0 4px rgba(45, 212, 191, 0.13), 0 16px 32px rgba(0, 0, 0, 0.24);
+}
+
+[data-theme="dark"] select:hover,
+[data-theme="dark"] .filter-select:hover {
+    border-color: rgba(45, 212, 191, 0.5) !important;
+    background-color: rgba(15, 23, 42, 0.94) !important;
 }
 
 [data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator {
@@ -2393,6 +2458,35 @@ textarea,
     transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
 }
 
+select {
+    color-scheme: light;
+    appearance: none;
+    background-image:
+        linear-gradient(45deg, transparent 50%, #64748b 50%),
+        linear-gradient(135deg, #64748b 50%, transparent 50%),
+        linear-gradient(135deg, rgba(20, 184, 166, 0.08), rgba(37, 99, 235, 0.04));
+    background-position:
+        calc(100% - 18px) 50%,
+        calc(100% - 13px) 50%,
+        0 0;
+    background-size:
+        5px 5px,
+        5px 5px,
+        100% 100%;
+    background-repeat: no-repeat;
+    padding-right: 40px;
+}
+
+select option {
+    background: #ffffff;
+    color: #0f172a;
+}
+
+select option:checked {
+    background: #0ea5a4;
+    color: #ffffff;
+}
+
 input:focus,
 select:focus,
 textarea:focus,
@@ -2401,8 +2495,14 @@ textarea:focus,
 .filter-date:focus {
     outline: none;
     border-color: rgba(14, 165, 164, 0.75);
-    box-shadow: 0 0 0 4px rgba(14, 165, 164, 0.12);
+    box-shadow: 0 0 0 4px rgba(14, 165, 164, 0.12), 0 14px 28px rgba(15, 23, 42, 0.08);
     background: #ffffff;
+}
+
+select:hover,
+.filter-select:hover {
+    border-color: rgba(14, 165, 164, 0.55);
+    background-color: #ffffff;
 }
 
 .filter-row {
@@ -2714,6 +2814,151 @@ input.currency:focus {
     padding: 7px 28px 7px 10px;
     border-radius: 10px;
     font-size: 13px;
+    font-weight: 800;
+    border-color: rgba(148, 163, 184, 0.34);
+    background-color: rgba(255, 255, 255, 0.82);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.native-select-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    min-width: 0;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.custom-select {
+    position: relative;
+    width: 100%;
+    min-width: 118px;
+}
+
+.filter-row .custom-select,
+.period-form .custom-select,
+.form-card .custom-select {
+    width: 100%;
+}
+
+.custom-select-trigger {
+    width: 100%;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 7px 12px;
+    border: 1px solid rgba(148, 163, 184, 0.34);
+    border-radius: 10px;
+    background:
+        linear-gradient(135deg, rgba(20, 184, 166, 0.08), rgba(37, 99, 235, 0.04)),
+        rgba(255, 255, 255, 0.86);
+    color: var(--text);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+}
+
+.custom-select-value {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dashboard-period-form .custom-select-trigger {
+    min-height: 34px;
+    padding: 7px 12px;
+}
+
+.custom-select-trigger:hover,
+.custom-select.is-open .custom-select-trigger {
+    border-color: rgba(14, 165, 164, 0.65);
+    box-shadow: 0 0 0 4px rgba(14, 165, 164, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.custom-select-trigger:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.custom-select-arrow {
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(45deg) translateY(-2px);
+    opacity: 0.82;
+    transition: transform 0.16s ease;
+}
+
+.custom-select.is-open .custom-select-arrow {
+    transform: rotate(225deg) translate(-2px, -1px);
+}
+
+.custom-select-menu {
+    position: absolute;
+    z-index: 50;
+    top: calc(100% + 8px);
+    left: 0;
+    width: max(100%, 150px);
+    max-height: 310px;
+    overflow: auto;
+    padding: 6px;
+    border: 1px solid rgba(14, 165, 164, 0.22);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 24px 55px rgba(15, 23, 42, 0.18);
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+    pointer-events: none;
+    transition: opacity 0.14s ease, transform 0.14s ease;
+}
+
+.custom-select.is-open .custom-select-menu {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+
+.custom-select-option {
+    width: 100%;
+    min-height: 34px;
+    display: flex;
+    align-items: center;
+    padding: 8px 10px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: #0f172a;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 800;
+    text-align: left;
+    cursor: pointer;
+}
+
+.custom-select-option:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+}
+
+.custom-select-option:hover {
+    background: rgba(20, 184, 166, 0.12);
+    color: #0f766e;
+}
+
+.custom-select-option.is-selected {
+    background: linear-gradient(135deg, #14b8a6, #2563eb);
+    color: #ffffff;
 }
 
 .dashboard-period-form .btn {
@@ -2724,6 +2969,47 @@ input.currency:focus {
     border-color: rgba(148, 163, 184, 0.18);
     background: rgba(15, 23, 42, 0.62);
     box-shadow: 0 16px 32px rgba(2, 6, 23, 0.22);
+}
+
+[data-theme="dark"] .dashboard-period-form .filter-select {
+    border-color: rgba(148, 163, 184, 0.24) !important;
+    background-color: rgba(15, 23, 42, 0.78) !important;
+    box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.08);
+}
+
+[data-theme="dark"] .custom-select-trigger {
+    border-color: rgba(148, 163, 184, 0.24);
+    background:
+        linear-gradient(135deg, rgba(45, 212, 191, 0.12), rgba(37, 99, 235, 0.08)),
+        rgba(15, 23, 42, 0.82);
+    color: #f8fafc;
+    box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.08);
+}
+
+[data-theme="dark"] .custom-select-trigger:hover,
+[data-theme="dark"] .custom-select.is-open .custom-select-trigger {
+    border-color: rgba(45, 212, 191, 0.65);
+    box-shadow: 0 0 0 4px rgba(45, 212, 191, 0.12), inset 0 1px 0 rgba(148, 163, 184, 0.08);
+}
+
+[data-theme="dark"] .custom-select-menu {
+    border-color: rgba(45, 212, 191, 0.2);
+    background: rgba(15, 23, 42, 0.98);
+    box-shadow: 0 28px 70px rgba(0, 0, 0, 0.38);
+}
+
+[data-theme="dark"] .custom-select-option {
+    color: #e5edf8;
+}
+
+[data-theme="dark"] .custom-select-option:hover {
+    background: rgba(45, 212, 191, 0.13);
+    color: #99f6e4;
+}
+
+[data-theme="dark"] .custom-select-option.is-selected {
+    background: linear-gradient(135deg, #0ea5a4, #2563eb);
+    color: #ecfeff;
 }
 
 .logout-form {
@@ -2833,6 +3119,10 @@ td .actions .btn {
     white-space: nowrap;
 }
 
+td .actions .inline-form .btn {
+    width: auto;
+}
+
 .inline-form .btn {
     width: 100%;
 }
@@ -2862,12 +3152,31 @@ td .actions .btn {
 
 /* Credit card purchases: clearer cards with less competing text. */
 .split-layout .loan-list {
+    flex: 1 1 auto;
+    min-height: 0;
     display: grid;
     grid-template-columns: 1fr;
+    grid-auto-rows: max-content;
+    align-content: start;
     gap: 14px;
-    max-height: 560px;
-    overflow: auto;
+    height: auto;
+    max-height: none;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
     padding-right: 6px;
+}
+
+.split-layout > .panel {
+    height: var(--card-page-panel-height);
+    min-height: 0;
+    max-height: var(--card-page-panel-height);
+    display: flex;
+    flex-direction: column;
+}
+
+.split-layout > .panel > .panel-header {
+    flex: 0 0 auto;
 }
 
 .split-layout .loan-list::-webkit-scrollbar {
@@ -2886,6 +3195,7 @@ td .actions .btn {
 }
 
 .split-layout .loan-card {
+    flex: 0 0 auto;
     min-height: auto;
     padding: 0;
     overflow: hidden;
@@ -3006,6 +3316,25 @@ td .actions .btn {
         grid-template-columns: 1fr;
     }
 
+    .split-layout > .panel {
+        min-height: auto;
+        max-height: none;
+    }
+
+    .split-layout .loan-list {
+        height: auto;
+        max-height: 560px;
+    }
+
+    .installment-groups {
+        overflow: visible;
+    }
+
+    .installment-group .table-wrap {
+        height: auto;
+        max-height: 430px;
+    }
+
     .loan-card-aside {
         justify-items: start;
         padding: 12px 0 0;
@@ -3084,15 +3413,22 @@ td .actions .btn {
     grid-template-columns: repeat(auto-fit, minmax(min(680px, 100%), 1fr));
     align-items: start;
     gap: 18px;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: visible;
+    --installment-table-height: calc(var(--card-page-panel-height) - 222px);
 }
 
 .installment-group {
     display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
     gap: 12px;
+    min-height: 0;
 }
 
 .installment-group .table-wrap {
-    max-height: 430px;
+    max-height: none;
+    height: max(260px, var(--installment-table-height));
     overflow: auto;
 }
 
@@ -3110,6 +3446,10 @@ td .actions .btn {
 
 .installment-group .table-wrap::-webkit-scrollbar-track {
     background: transparent;
+}
+
+.installment-group .table-wrap {
+    overscroll-behavior: contain;
 }
 
 .installment-group table {
@@ -3189,7 +3529,8 @@ td .actions .btn {
         flex-basis: 100%;
     }
 
-    .dashboard-period-form .filter-select {
+    .dashboard-period-form .filter-select,
+    .dashboard-period-form .custom-select {
         flex: 1 1 130px;
     }
 
@@ -3204,6 +3545,7 @@ body,
 .table-wrap,
 .loan-list,
 .top-cards,
+.custom-select-menu,
 .installment-group .table-wrap {
     scrollbar-width: thin;
     scrollbar-color: rgba(100, 116, 139, 0.45) transparent;
@@ -3214,6 +3556,7 @@ body::-webkit-scrollbar,
 .table-wrap::-webkit-scrollbar,
 .loan-list::-webkit-scrollbar,
 .top-cards::-webkit-scrollbar,
+.custom-select-menu::-webkit-scrollbar,
 .installment-group .table-wrap::-webkit-scrollbar {
     width: 10px;
     height: 10px;
@@ -3224,6 +3567,7 @@ body::-webkit-scrollbar-thumb,
 .table-wrap::-webkit-scrollbar-thumb,
 .loan-list::-webkit-scrollbar-thumb,
 .top-cards::-webkit-scrollbar-thumb,
+.custom-select-menu::-webkit-scrollbar-thumb,
 .installment-group .table-wrap::-webkit-scrollbar-thumb {
     border: 3px solid transparent;
     border-radius: 999px;
@@ -3246,6 +3590,7 @@ body::-webkit-scrollbar-track,
 .table-wrap::-webkit-scrollbar-track,
 .loan-list::-webkit-scrollbar-track,
 .top-cards::-webkit-scrollbar-track,
+.custom-select-menu::-webkit-scrollbar-track,
 .installment-group .table-wrap::-webkit-scrollbar-track {
     background: transparent;
 }
@@ -3277,4 +3622,27 @@ body::-webkit-scrollbar-track,
 [data-theme="dark"] .installment-group .table-wrap::-webkit-scrollbar-thumb:hover {
     background: rgba(203, 213, 225, 0.72);
     background-clip: padding-box;
+}
+
+@media (max-width: 640px) {
+    .split-layout .loan-list {
+        height: min(52vh, 560px);
+        max-height: 560px;
+        overflow-y: auto;
+    }
+
+    .installment-group .table-wrap {
+        height: auto;
+        max-height: 430px;
+    }
+}
+
+.split-layout > .panel:first-child .loan-list {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-auto-rows: max-content;
+    align-content: start;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    scrollbar-gutter: stable;
 }

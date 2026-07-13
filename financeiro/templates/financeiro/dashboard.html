@@ -2,7 +2,7 @@
 
 {% block title %}Painel Financeiro - Visão Geral{% endblock %}
 {% block page_title %}Painel Financeiro{% endblock %}
-{% block page_subtitle %}Visão geral das receitas, despesas, saldos e parcelas pendentes no mês atual.{% endblock %}
+{% block page_subtitle %}Visão geral das receitas, despesas, saldos e parcelas pendentes no período selecionado.{% endblock %}
 
 {% block page_actions %}
 <form method="get" class="period-form dashboard-period-form" data-auto-submit-period>
@@ -25,7 +25,6 @@
 {% load currency_tags %}
 <div class="dashboard-section-title">
     <span>Resumo financeiro</span>
-    <h2>Resultado do período selecionado</h2>
 </div>
 
 <section class="panel dashboard-overview">
@@ -40,14 +39,14 @@
             <div class="balance-variation {{ saldo_variacao_class }}">
                 {{ saldo_variacao_percent }}% vs mês anterior
                 <span class="tooltip-icon" tabindex="0">ⓘ
-                    <span class="tooltip-popup">Calculado como receitas recebidas menos despesas pagas no mês atual comparado ao mês anterior.</span>
+                    <span class="tooltip-popup">Calculado como receitas recebidas menos despesas pagas no mês selecionado comparado ao mês anterior.</span>
                 </span>
             </div>
         {% else %}
             <div class="balance-variation {{ saldo_variacao_class }}">
                 Variação: {{ saldo_variacao_change|format_brl }} vs mês anterior
                 <span class="tooltip-icon" tabindex="0">ⓘ
-                    <span class="tooltip-popup">Calculado como receitas recebidas menos despesas pagas no mês atual comparado ao mês anterior.</span>
+                    <span class="tooltip-popup">Calculado como receitas recebidas menos despesas pagas no mês selecionado comparado ao mês anterior.</span>
                 </span>
             </div>
         {% endif %}
@@ -84,7 +83,6 @@
 <section class="dashboard-section">
     <div class="dashboard-section-title">
         <span>Atenção do mês</span>
-        <h2>Pendências e próximos cuidados</h2>
     </div>
 
     <div class="attention-grid">
@@ -126,7 +124,6 @@
 <section class="dashboard-section dashboard-accounts-section">
     <div class="dashboard-section-title">
         <span>Contas</span>
-        <h2>Saldos por conta</h2>
     </div>
 
     <section class="cards top-cards">
@@ -171,7 +168,6 @@
 <section class="dashboard-section">
     <div class="dashboard-section-title">
         <span>Detalhes</span>
-        <h2>Lançamentos e cartão</h2>
     </div>
     <div class="grid dashboard-grid">
     <section class="panel dashboard-box dashboard-box-income">
@@ -179,7 +175,7 @@
         <div class="table-wrap">
             <table>
                 <tr>
-                    <th>Descricao</th>
+                    <th>Descrição</th>
                     <th>Valor</th>
                     <th>Data</th>
                 </tr>
@@ -203,7 +199,7 @@
         <div class="table-wrap">
             <table>
                 <tr>
-                    <th>Descricao</th>
+                    <th>Descrição</th>
                     <th>Valor</th>
                     <th>Data</th>
                 </tr>
@@ -380,17 +376,3 @@
 </section>
 {% endblock %}
 
-{% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', function(){
-    var form = document.querySelector('[data-auto-submit-period]');
-    if(!form) return;
-
-    form.querySelectorAll('select').forEach(function(select){
-        select.addEventListener('change', function(){
-            form.requestSubmit ? form.requestSubmit() : form.submit();
-        });
-    });
-});
-</script>
-{% endblock %}

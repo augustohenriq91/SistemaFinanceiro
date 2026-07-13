@@ -1,4 +1,4 @@
-# Sistema Financeiro Pessoal
+﻿# Sistema Financeiro Pessoal
 
 Sistema web em Django para controle financeiro pessoal.
 
@@ -10,13 +10,8 @@ Sistema web em Django para controle financeiro pessoal.
 - Despesas: listar, criar, editar e excluir
 - Contas: listar, criar, editar e excluir
 - Categorias: listar, criar, editar e excluir
-<<<<<<< HEAD
 - Cartão de Crédito: cadastrar pessoa, banco, valor usado e parcelas
 - Controle mensal de parcelas do Cartão de Crédito
-=======
-- Gasto com cartões: cadastrar pessoa, banco, valor usado e parcelas
-- Controle mensal de parcelas do gasto com cartões
->>>>>>> fd0bd6b736464bfe364d04a0b39eca147ad3875e
 - Dia de vencimento do cartao em cada emprestimo
 - Dashboard mostra quem ainda nao pagou parcelas com vencimento no mes atual
 - Calculo de saldo por conta

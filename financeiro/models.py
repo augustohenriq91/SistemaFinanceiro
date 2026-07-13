@@ -1,4 +1,6 @@
-﻿from django.db import models
+from django.conf import settings
+from django.db import models
+
 
 class Categoria(models.Model):
     TIPO_CHOICES = [
@@ -6,6 +8,7 @@ class Categoria(models.Model):
         ('despesa', 'Despesa'),
     ]
 
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='categorias_financeiras')
     nome = models.CharField('Nome', max_length=100)
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
 
@@ -24,6 +27,7 @@ class Conta(models.Model):
         ('investimento', 'Investimento'),
     ]
 
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='contas_financeiras')
     nome = models.CharField('Nome', max_length=100)
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
     saldo_inicial = models.DecimalField('Saldo inicial', max_digits=12, decimal_places=2, default=0)
@@ -40,6 +44,7 @@ class Conta(models.Model):
 
 
 class Receita(models.Model):
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='receitas_financeiras')
     descricao = models.CharField('Descrição', max_length=150)
     valor = models.DecimalField(max_digits=12, decimal_places=2)
     data = models.DateField()
@@ -56,6 +61,7 @@ class Receita(models.Model):
 
 
 class Despesa(models.Model):
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='despesas_financeiras')
     descricao = models.CharField('Descrição', max_length=150)
     valor = models.DecimalField(max_digits=12, decimal_places=2)
     data = models.DateField()
@@ -72,6 +78,7 @@ class Despesa(models.Model):
 
 
 class EmprestimoCartao(models.Model):
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='compras_cartao')
     pessoa = models.CharField('Pessoa', max_length=120)
     banco = models.CharField(max_length=100)
     cartao_utilizado = models.ForeignKey(

@@ -86,9 +86,18 @@ class BRLDateField(forms.DateField):
 
 
 class ReceitaForm(forms.ModelForm):
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if user is not None:
+            self.fields['categoria'].queryset = Categoria.objects.filter(
+                usuario=user,
+                tipo='receita',
+            ).order_by('nome')
+            self.fields['conta'].queryset = Conta.objects.filter(usuario=user).order_by('nome')
+
     class Meta:
         model = Receita
-        fields = ['descricao', 'valor', 'data', 'categoria', 'conta', 'recebido']
+        fields = ['descricao', 'valor', 'data', 'categoria', 'conta']
         widgets = {
             'data': forms.TextInput(attrs={'class': 'date-mask', 'placeholder': 'DD/MM/YYYY'}),
             'valor': forms.TextInput(attrs={
@@ -115,6 +124,15 @@ class ReceitaForm(forms.ModelForm):
 
 
 class DespesaForm(forms.ModelForm):
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if user is not None:
+            self.fields['categoria'].queryset = Categoria.objects.filter(
+                usuario=user,
+                tipo='despesa',
+            ).order_by('nome')
+            self.fields['conta'].queryset = Conta.objects.filter(usuario=user).order_by('nome')
+
     class Meta:
         model = Despesa
         fields = ['descricao', 'valor', 'data', 'categoria', 'conta', 'pago']
@@ -224,11 +242,17 @@ class CategoriaForm(forms.ModelForm):
 
 
 class EmprestimoCartaoForm(forms.ModelForm):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['cartao_utilizado'].queryset = Conta.objects.filter(
-            possui_cartao_credito=True
-        ).order_by('nome')
+        cartoes = Conta.objects.filter(possui_cartao_credito=True)
+        contas = Conta.objects.all()
+
+        if user is not None:
+            cartoes = cartoes.filter(usuario=user)
+            contas = contas.filter(usuario=user)
+
+        self.fields['cartao_utilizado'].queryset = cartoes.order_by('nome')
+        self.fields['conta_recebimento'].queryset = contas.order_by('nome')
         self.fields['cartao_utilizado'].required = True
         self.fields['conta_recebimento'].required = True
 

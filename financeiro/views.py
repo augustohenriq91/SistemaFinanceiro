@@ -1,10 +1,10 @@
 ﻿from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.conf import settings
-from django.http import FileResponse, Http404
+from django.http import HttpResponse
 from django.core.paginator import Paginator
 from django.db.models import Count, Sum
 from django.db.models.deletion import ProtectedError
+import json
 from decimal import Decimal
 from datetime import date, datetime, timedelta
 from urllib.parse import urlencode
@@ -15,7 +15,7 @@ from .forms import ReceitaForm, DespesaForm, ContaForm, CategoriaForm, Emprestim
 MESES = [
     (1, 'Janeiro'),
     (2, 'Fevereiro'),
-    (3, 'Marco'),
+    (3, 'Março'),
     (4, 'Abril'),
     (5, 'Maio'),
     (6, 'Junho'),
@@ -107,12 +107,12 @@ def periodo_request(request):
     return ano, mes
 
 
-def anos_disponiveis():
+def anos_disponiveis(usuario):
     anos = set()
     for model in (Receita, Despesa):
-        for valor in model.objects.dates('data', 'year'):
+        for valor in model.objects.filter(usuario=usuario).dates('data', 'year'):
             anos.add(valor.year)
-    for valor in EmprestimoCartao.objects.dates('data_compra', 'year'):
+    for valor in EmprestimoCartao.objects.filter(usuario=usuario).dates('data_compra', 'year'):
         anos.add(valor.year)
     anos.add(date.today().year)
     return sorted(anos, reverse=True)
@@ -149,11 +149,12 @@ def gerar_parcelas_emprestimo(emprestimo):
 
 
 def dashboard(request):
+    usuario = request.user
     ano_selecionado, mes_selecionado = periodo_request(request)
     data_periodo = date(ano_selecionado, mes_selecionado, 1)
 
-    receitas_periodo = Receita.objects.filter(data__year=ano_selecionado, data__month=mes_selecionado)
-    despesas_periodo = Despesa.objects.filter(data__year=ano_selecionado, data__month=mes_selecionado)
+    receitas_periodo = Receita.objects.filter(usuario=usuario, data__year=ano_selecionado, data__month=mes_selecionado)
+    despesas_periodo = Despesa.objects.filter(usuario=usuario, data__year=ano_selecionado, data__month=mes_selecionado)
 
     total_receitas = receitas_periodo.filter(recebido=True).aggregate(
         total=Sum('valor')
@@ -171,23 +172,25 @@ def dashboard(request):
         total=Sum('valor')
     )['total'] or 0
 
-    total_despesas_pendentes = Despesa.objects.filter(pago=False).aggregate(
+    total_despesas_pendentes = Despesa.objects.filter(usuario=usuario, pago=False).aggregate(
         total=Sum('valor')
     )['total'] or 0
 
     saldo = total_receitas - total_despesas
 
-    contas = Conta.objects.all()
+    contas = Conta.objects.filter(usuario=usuario).order_by('nome')
     saldo_total_contas = 0
     contas_com_saldo = []
 
     for conta in contas:
         receitas_conta = Receita.objects.filter(
+            usuario=usuario,
             conta=conta,
             recebido=True
         ).aggregate(total=Sum('valor'))['total'] or 0
 
         despesas_conta = Despesa.objects.filter(
+            usuario=usuario,
             conta=conta,
             pago=True
         ).aggregate(total=Sum('valor'))['total'] or 0
@@ -217,6 +220,7 @@ def dashboard(request):
         'emprestimo__cartao_utilizado',
         'emprestimo__conta_recebimento',
     ).filter(
+        emprestimo__usuario=usuario,
         vencimento__year=ano_selecionado,
         vencimento__month=mes_selecionado,
     ).order_by('vencimento', 'emprestimo__pessoa', 'numero')
@@ -238,12 +242,12 @@ def dashboard(request):
     mes_atual_month = mes_selecionado
     mes_anterior = adicionar_meses(data_periodo, -1)
 
-    receitas_mes_atual = Receita.objects.filter(recebido=True, data__year=mes_atual_year, data__month=mes_atual_month).aggregate(total=Sum('valor'))['total'] or 0
-    despesas_mes_atual = Despesa.objects.filter(pago=True, data__year=mes_atual_year, data__month=mes_atual_month).aggregate(total=Sum('valor'))['total'] or 0
+    receitas_mes_atual = Receita.objects.filter(usuario=usuario, recebido=True, data__year=mes_atual_year, data__month=mes_atual_month).aggregate(total=Sum('valor'))['total'] or 0
+    despesas_mes_atual = Despesa.objects.filter(usuario=usuario, pago=True, data__year=mes_atual_year, data__month=mes_atual_month).aggregate(total=Sum('valor'))['total'] or 0
     net_mes_atual = receitas_mes_atual - despesas_mes_atual
 
-    receitas_mes_anterior = Receita.objects.filter(recebido=True, data__year=mes_anterior.year, data__month=mes_anterior.month).aggregate(total=Sum('valor'))['total'] or 0
-    despesas_mes_anterior = Despesa.objects.filter(pago=True, data__year=mes_anterior.year, data__month=mes_anterior.month).aggregate(total=Sum('valor'))['total'] or 0
+    receitas_mes_anterior = Receita.objects.filter(usuario=usuario, recebido=True, data__year=mes_anterior.year, data__month=mes_anterior.month).aggregate(total=Sum('valor'))['total'] or 0
+    despesas_mes_anterior = Despesa.objects.filter(usuario=usuario, pago=True, data__year=mes_anterior.year, data__month=mes_anterior.month).aggregate(total=Sum('valor'))['total'] or 0
     net_mes_anterior = receitas_mes_anterior - despesas_mes_anterior
 
     saldo_variacao_percent = None
@@ -284,7 +288,7 @@ def dashboard(request):
         'pessoas_cartao_aberto': pessoas_cartao_aberto,
         'total_pessoas_cartao_aberto': total_pessoas_cartao_aberto,
         'meses': MESES,
-        'anos': anos_disponiveis(),
+        'anos': anos_disponiveis(usuario),
         'mes_selecionado': mes_selecionado,
         'ano_selecionado': ano_selecionado,
         'saldo_variacao_percent': saldo_variacao_percent,
@@ -296,6 +300,7 @@ def dashboard(request):
 
 
 def relatorios(request):
+    usuario = request.user
     try:
         ano = int(request.GET.get('ano', date.today().year))
     except (TypeError, ValueError):
@@ -306,11 +311,13 @@ def relatorios(request):
 
     for numero_mes, nome_mes in MESES:
         receitas_mes = Receita.objects.filter(
+            usuario=usuario,
             recebido=True,
             data__year=ano,
             data__month=numero_mes,
         ).aggregate(total=Sum('valor'))['total'] or 0
         despesas_mes = Despesa.objects.filter(
+            usuario=usuario,
             pago=True,
             data__year=ano,
             data__month=numero_mes,
@@ -324,8 +331,9 @@ def relatorios(request):
         })
 
     receitas_por_categoria = []
-    for categoria in Categoria.objects.filter(tipo='receita').order_by('nome'):
+    for categoria in Categoria.objects.filter(usuario=usuario, tipo='receita').order_by('nome'):
         total = Receita.objects.filter(
+            usuario=usuario,
             categoria=categoria,
             recebido=True,
             data__year=ano,
@@ -334,8 +342,9 @@ def relatorios(request):
             receitas_por_categoria.append({'categoria': categoria.nome, 'total': total})
 
     despesas_por_categoria = []
-    for categoria in Categoria.objects.filter(tipo='despesa').order_by('nome'):
+    for categoria in Categoria.objects.filter(usuario=usuario, tipo='despesa').order_by('nome'):
         total = Despesa.objects.filter(
+            usuario=usuario,
             categoria=categoria,
             pago=True,
             data__year=ano,
@@ -348,7 +357,7 @@ def relatorios(request):
 
     contexto = {
         'ano': ano,
-        'anos': anos_disponiveis(),
+        'anos': anos_disponiveis(usuario),
         'linhas_mensais': linhas_mensais,
         'receitas_por_categoria': receitas_por_categoria,
         'despesas_por_categoria': despesas_por_categoria,
@@ -361,16 +370,88 @@ def relatorios(request):
 
 
 def baixar_backup(request):
-    db_path = settings.BASE_DIR / 'db.sqlite3'
-    if not db_path.exists():
-        raise Http404('Banco de dados não encontrado.')
+    usuario = request.user
+    dados = {
+        'usuario': {
+            'username': usuario.username,
+            'nome': usuario.get_full_name(),
+            'email': usuario.email,
+        },
+        'categorias': list(
+            Categoria.objects.filter(usuario=usuario).values('id', 'nome', 'tipo')
+        ),
+        'contas': list(
+            Conta.objects.filter(usuario=usuario).values(
+                'id',
+                'nome',
+                'tipo',
+                'saldo_inicial',
+                'possui_cartao_credito',
+                'dias_antes_fechamento_fatura',
+                'dia_vencimento_fatura',
+            )
+        ),
+        'receitas': list(
+            Receita.objects.filter(usuario=usuario).values(
+                'id',
+                'descricao',
+                'valor',
+                'data',
+                'categoria_id',
+                'conta_id',
+                'recebido',
+            )
+        ),
+        'despesas': list(
+            Despesa.objects.filter(usuario=usuario).values(
+                'id',
+                'descricao',
+                'valor',
+                'data',
+                'categoria_id',
+                'conta_id',
+                'pago',
+            )
+        ),
+        'compras_cartao': list(
+            EmprestimoCartao.objects.filter(usuario=usuario).values(
+                'id',
+                'pessoa',
+                'banco',
+                'cartao_utilizado_id',
+                'conta_recebimento_id',
+                'descricao',
+                'valor_total',
+                'quantidade_parcelas',
+                'data_compra',
+                'dia_vencimento_cartao',
+                'observacao',
+            )
+        ),
+        'parcelas_cartao': list(
+            ParcelaEmprestimo.objects.filter(emprestimo__usuario=usuario).values(
+                'id',
+                'emprestimo_id',
+                'numero',
+                'valor',
+                'vencimento',
+                'pago',
+                'data_pagamento',
+                'receita_gerada_id',
+            )
+        ),
+    }
 
-    filename = f'backup_financeiro_{datetime.now():%Y%m%d_%H%M%S}.sqlite3'
-    return FileResponse(open(db_path, 'rb'), as_attachment=True, filename=filename)
+    conteudo = json.dumps(dados, ensure_ascii=False, indent=2, default=str)
+    filename = f'backup_financeiro_{usuario.username}_{datetime.now():%Y%m%d_%H%M%S}.json'
+    response = HttpResponse(conteudo, content_type='application/json; charset=utf-8')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
 
 
 def lista_receitas(request):
-    receitas = Receita.objects.order_by('-data')
+    usuario = request.user
+    receitas = Receita.objects.filter(usuario=usuario).order_by('-data')
     q = request.GET.get('q', '').strip()
     categoria_id = request.GET.get('categoria', '')
     conta_id = request.GET.get('conta', '')
@@ -392,8 +473,8 @@ def lista_receitas(request):
         if dt:
             receitas = receitas.filter(data=dt)
 
-    categorias = Categoria.objects.filter(tipo='receita').order_by('nome')
-    contas = Conta.objects.order_by('nome')
+    categorias = Categoria.objects.filter(usuario=usuario, tipo='receita').order_by('nome')
+    contas = Conta.objects.filter(usuario=usuario).order_by('nome')
     paginator = Paginator(receitas, 10)
     page_obj = paginator.get_page(request.GET.get('page'))
     querystring = urlencode({k: v for k, v in request.GET.items() if v and k != 'page'})
@@ -414,7 +495,8 @@ def lista_receitas(request):
     return render(request, 'financeiro/lista_receitas.html', contexto)
 
 def lista_despesas(request):
-    despesas = Despesa.objects.order_by('-data')
+    usuario = request.user
+    despesas = Despesa.objects.filter(usuario=usuario).order_by('-data')
     q = request.GET.get('q', '').strip()
     categoria_id = request.GET.get('categoria', '')
     conta_id = request.GET.get('conta', '')
@@ -436,8 +518,8 @@ def lista_despesas(request):
         if dt:
             despesas = despesas.filter(data=dt)
 
-    categorias = Categoria.objects.filter(tipo='despesa').order_by('nome')
-    contas = Conta.objects.order_by('nome')
+    categorias = Categoria.objects.filter(usuario=usuario, tipo='despesa').order_by('nome')
+    contas = Conta.objects.filter(usuario=usuario).order_by('nome')
     paginator = Paginator(despesas, 10)
     page_obj = paginator.get_page(request.GET.get('page'))
     querystring = urlencode({k: v for k, v in request.GET.items() if v and k != 'page'})
@@ -459,13 +541,15 @@ def lista_despesas(request):
 
 def nova_receita(request):
     if request.method == 'POST':
-        form = ReceitaForm(request.POST)
+        form = ReceitaForm(request.POST, user=request.user)
 
         if form.is_valid():
-            form.save()
+            receita = form.save(commit=False)
+            receita.usuario = request.user
+            receita.save()
             return redirect('lista_receitas')
     else:
-        form = ReceitaForm()
+        form = ReceitaForm(user=request.user)
 
     contexto = {
         'form': form,
@@ -474,16 +558,16 @@ def nova_receita(request):
     return render(request, 'financeiro/form_receita.html', contexto)
 
 def editar_receita(request, receita_id):
-    receita = get_object_or_404(Receita, id=receita_id)
+    receita = get_object_or_404(Receita, id=receita_id, usuario=request.user)
 
     if request.method == 'POST':
-        form = ReceitaForm(request.POST, instance=receita)
+        form = ReceitaForm(request.POST, instance=receita, user=request.user)
 
         if form.is_valid():
             form.save()
             return redirect('lista_receitas')
     else:
-        form = ReceitaForm(instance=receita)
+        form = ReceitaForm(instance=receita, user=request.user)
 
     contexto = {
         'form': form,
@@ -493,7 +577,7 @@ def editar_receita(request, receita_id):
     return render(request, 'financeiro/form_receita.html', contexto)
 
 def excluir_receita(request, receita_id):
-    receita = get_object_or_404(Receita, id=receita_id)
+    receita = get_object_or_404(Receita, id=receita_id, usuario=request.user)
 
     if request.method == 'POST':
         receita.delete()
@@ -505,15 +589,29 @@ def excluir_receita(request, receita_id):
 
     return render(request, 'financeiro/confirmar_exclusao_receita.html', contexto)
 
+def alternar_recebimento_receita(request, receita_id):
+    receita = get_object_or_404(Receita, id=receita_id, usuario=request.user)
+
+    if request.method == 'POST':
+        receita.recebido = not receita.recebido
+        receita.save(update_fields=['recebido'])
+
+    proxima_pagina = request.POST.get('next') or 'lista_receitas'
+    if not proxima_pagina.startswith('/'):
+        proxima_pagina = 'lista_receitas'
+    return redirect(proxima_pagina)
+
 def nova_despesa(request):
     if request.method == 'POST':
-        form = DespesaForm(request.POST)
+        form = DespesaForm(request.POST, user=request.user)
 
         if form.is_valid():
-            form.save()
+            despesa = form.save(commit=False)
+            despesa.usuario = request.user
+            despesa.save()
             return redirect('lista_despesas')
     else:
-        form = DespesaForm()
+        form = DespesaForm(user=request.user)
 
     contexto = {
         'form': form,
@@ -522,16 +620,16 @@ def nova_despesa(request):
     return render(request, 'financeiro/form_despesa.html', contexto)
 
 def editar_despesa(request, despesa_id):
-    despesa = get_object_or_404(Despesa, id=despesa_id)
+    despesa = get_object_or_404(Despesa, id=despesa_id, usuario=request.user)
 
     if request.method == 'POST':
-        form = DespesaForm(request.POST, instance=despesa)
+        form = DespesaForm(request.POST, instance=despesa, user=request.user)
 
         if form.is_valid():
             form.save()
             return redirect('lista_despesas')
     else:
-        form = DespesaForm(instance=despesa)
+        form = DespesaForm(instance=despesa, user=request.user)
 
     contexto = {
         'form': form,
@@ -541,7 +639,7 @@ def editar_despesa(request, despesa_id):
     return render(request, 'financeiro/form_despesa.html', contexto)
 
 def excluir_despesa(request, despesa_id):
-    despesa = get_object_or_404(Despesa, id=despesa_id)
+    despesa = get_object_or_404(Despesa, id=despesa_id, usuario=request.user)
 
     if request.method == 'POST':
         despesa.delete()
@@ -554,7 +652,8 @@ def excluir_despesa(request, despesa_id):
     return render(request, 'financeiro/confirmar_exclusao_despesa.html', contexto)
 
 def lista_contas(request):
-    contas = Conta.objects.order_by('nome')
+    usuario = request.user
+    contas = Conta.objects.filter(usuario=usuario).order_by('nome')
     q = request.GET.get('q', '').strip()
     tipo = request.GET.get('tipo', '')
     cartao = request.GET.get('cartao', '')
@@ -576,11 +675,13 @@ def lista_contas(request):
 
     for conta in page_obj:
         total_receitas = Receita.objects.filter(
+            usuario=usuario,
             conta=conta,
             recebido=True
         ).aggregate(total=Sum('valor'))['total'] or 0
 
         total_despesas = Despesa.objects.filter(
+            usuario=usuario,
             conta=conta,
             pago=True
         ).aggregate(total=Sum('valor'))['total'] or 0
@@ -611,7 +712,9 @@ def nova_conta(request):
         form = ContaForm(request.POST)
 
         if form.is_valid():
-            form.save()
+            conta = form.save(commit=False)
+            conta.usuario = request.user
+            conta.save()
             return redirect('lista_contas')
     else:
         form = ContaForm()
@@ -623,7 +726,7 @@ def nova_conta(request):
     return render(request, 'financeiro/form_conta.html', contexto)
 
 def editar_conta(request, conta_id):
-    conta = get_object_or_404(Conta, id=conta_id)
+    conta = get_object_or_404(Conta, id=conta_id, usuario=request.user)
 
     if request.method == 'POST':
         form = ContaForm(request.POST, instance=conta)
@@ -642,7 +745,7 @@ def editar_conta(request, conta_id):
     return render(request, 'financeiro/form_conta.html', contexto)
 
 def excluir_conta(request, conta_id):
-    conta = get_object_or_404(Conta, id=conta_id)
+    conta = get_object_or_404(Conta, id=conta_id, usuario=request.user)
     erro = None
 
     if request.method == 'POST':
@@ -660,7 +763,7 @@ def excluir_conta(request, conta_id):
     return render(request, 'financeiro/confirmar_exclusao_conta.html', contexto)
 
 def lista_categorias(request):
-    categorias = Categoria.objects.order_by('tipo', 'nome')
+    categorias = Categoria.objects.filter(usuario=request.user).order_by('tipo', 'nome')
     q = request.GET.get('q', '').strip()
     tipo = request.GET.get('tipo', '')
 
@@ -688,7 +791,9 @@ def nova_categoria(request):
         form = CategoriaForm(request.POST)
 
         if form.is_valid():
-            form.save()
+            categoria = form.save(commit=False)
+            categoria.usuario = request.user
+            categoria.save()
             return redirect('lista_categorias')
     else:
         form = CategoriaForm()
@@ -700,7 +805,7 @@ def nova_categoria(request):
     return render(request, 'financeiro/form_categoria.html', contexto)
 
 def editar_categoria(request, categoria_id):
-    categoria = get_object_or_404(Categoria, id=categoria_id)
+    categoria = get_object_or_404(Categoria, id=categoria_id, usuario=request.user)
 
     if request.method == 'POST':
         form = CategoriaForm(request.POST, instance=categoria)
@@ -719,7 +824,7 @@ def editar_categoria(request, categoria_id):
     return render(request, 'financeiro/form_categoria.html', contexto)
 
 def excluir_categoria(request, categoria_id):
-    categoria = get_object_or_404(Categoria, id=categoria_id)
+    categoria = get_object_or_404(Categoria, id=categoria_id, usuario=request.user)
     erro = None
 
     if request.method == 'POST':
@@ -737,7 +842,8 @@ def excluir_categoria(request, categoria_id):
     return render(request, 'financeiro/confirmar_exclusao_categoria.html', contexto)
 
 def lista_emprestimos_cartao(request):
-    emprestimos = EmprestimoCartao.objects.select_related('cartao_utilizado', 'conta_recebimento').order_by('-data_compra')
+    usuario = request.user
+    emprestimos = EmprestimoCartao.objects.filter(usuario=usuario).select_related('cartao_utilizado', 'conta_recebimento').order_by('-data_compra')
     q = request.GET.get('q', '').strip()
     cartao_id = request.GET.get('cartao', '')
     status = request.GET.get('status', '')
@@ -755,11 +861,12 @@ def lista_emprestimos_cartao(request):
         'emprestimo__cartao_utilizado',
         'emprestimo__conta_recebimento',
     ).filter(
+        emprestimo__usuario=usuario,
         emprestimo_id__in=emprestimos_filtrados_ids,
     ).order_by('vencimento', 'emprestimo__pessoa', 'numero')
 
     parcelas_pendentes = parcelas.filter(pago=False)
-    parcelas_pagas = parcelas.filter(pago=True)
+    parcelas_pagas = parcelas.filter(pago=True).order_by('-vencimento', 'emprestimo__pessoa', 'numero')
 
     if status == 'pago':
         parcelas_pendentes = ParcelaEmprestimo.objects.none()
@@ -768,14 +875,16 @@ def lista_emprestimos_cartao(request):
 
     total_emprestado = emprestimos.aggregate(total=Sum('valor_total'))['total'] or 0
     total_pago = ParcelaEmprestimo.objects.filter(
+        emprestimo__usuario=usuario,
         emprestimo_id__in=emprestimos_filtrados_ids,
         pago=True,
     ).aggregate(total=Sum('valor'))['total'] or 0
     total_pendente = ParcelaEmprestimo.objects.filter(
+        emprestimo__usuario=usuario,
         emprestimo_id__in=emprestimos_filtrados_ids,
         pago=False,
     ).aggregate(total=Sum('valor'))['total'] or 0
-    cartoes = Conta.objects.filter(possui_cartao_credito=True).order_by('nome')
+    cartoes = Conta.objects.filter(usuario=usuario, possui_cartao_credito=True).order_by('nome')
 
     contexto = {
         'emprestimos': emprestimos,
@@ -795,17 +904,18 @@ def lista_emprestimos_cartao(request):
 
 def novo_emprestimo_cartao(request):
     if request.method == 'POST':
-        form = EmprestimoCartaoForm(request.POST)
+        form = EmprestimoCartaoForm(request.POST, user=request.user)
 
         if form.is_valid():
             emprestimo = form.save(commit=False)
+            emprestimo.usuario = request.user
             emprestimo.banco = emprestimo.cartao_utilizado.nome
             emprestimo.dia_vencimento_cartao = emprestimo.cartao_utilizado.dia_vencimento_fatura
             emprestimo.save()
             gerar_parcelas_emprestimo(emprestimo)
             return redirect('lista_emprestimos_cartao')
     else:
-        form = EmprestimoCartaoForm()
+        form = EmprestimoCartaoForm(user=request.user)
 
     contexto = {
         'form': form,
@@ -814,7 +924,7 @@ def novo_emprestimo_cartao(request):
     return render(request, 'financeiro/form_emprestimo_cartao.html', contexto)
 
 def editar_emprestimo_cartao(request, emprestimo_id):
-    emprestimo = get_object_or_404(EmprestimoCartao, id=emprestimo_id)
+    emprestimo = get_object_or_404(EmprestimoCartao, id=emprestimo_id, usuario=request.user)
     campos_que_recalculam_parcelas = {
         'cartao_utilizado',
         'valor_total',
@@ -823,7 +933,7 @@ def editar_emprestimo_cartao(request, emprestimo_id):
     }
 
     if request.method == 'POST':
-        form = EmprestimoCartaoForm(request.POST, instance=emprestimo)
+        form = EmprestimoCartaoForm(request.POST, instance=emprestimo, user=request.user)
 
         if form.is_valid():
             tem_parcela_paga = emprestimo.parcelas.filter(pago=True).exists()
@@ -841,6 +951,7 @@ def editar_emprestimo_cartao(request, emprestimo_id):
                 return render(request, 'financeiro/form_emprestimo_cartao.html', contexto)
 
             emprestimo = form.save(commit=False)
+            emprestimo.usuario = request.user
             emprestimo.banco = emprestimo.cartao_utilizado.nome
             emprestimo.dia_vencimento_cartao = emprestimo.cartao_utilizado.dia_vencimento_fatura
             emprestimo.save()
@@ -850,7 +961,7 @@ def editar_emprestimo_cartao(request, emprestimo_id):
 
             return redirect('lista_emprestimos_cartao')
     else:
-        form = EmprestimoCartaoForm(instance=emprestimo)
+        form = EmprestimoCartaoForm(instance=emprestimo, user=request.user)
 
     contexto = {
         'form': form,
@@ -860,7 +971,7 @@ def editar_emprestimo_cartao(request, emprestimo_id):
     return render(request, 'financeiro/form_emprestimo_cartao.html', contexto)
 
 def excluir_emprestimo_cartao(request, emprestimo_id):
-    emprestimo = get_object_or_404(EmprestimoCartao, id=emprestimo_id)
+    emprestimo = get_object_or_404(EmprestimoCartao, id=emprestimo_id, usuario=request.user)
 
     if request.method == 'POST':
         emprestimo.delete()
@@ -873,7 +984,7 @@ def excluir_emprestimo_cartao(request, emprestimo_id):
     return render(request, 'financeiro/confirmar_exclusao_emprestimo_cartao.html', contexto)
 
 def alternar_pagamento_parcela(request, parcela_id):
-    parcela = get_object_or_404(ParcelaEmprestimo, id=parcela_id)
+    parcela = get_object_or_404(ParcelaEmprestimo, id=parcela_id, emprestimo__usuario=request.user)
 
     if request.method == 'POST':
         if parcela.pago:
@@ -891,11 +1002,13 @@ def alternar_pagamento_parcela(request, parcela_id):
                 return redirect('lista_emprestimos_cartao')
 
             categoria, _ = Categoria.objects.get_or_create(
+                usuario=request.user,
                 nome='Pagamento cartão emprestado',
                 tipo='receita'
             )
 
             receita = Receita.objects.create(
+                usuario=request.user,
                 descricao=f'Pagamento cartão - {parcela.emprestimo.pessoa} ({parcela.numero}/{parcela.emprestimo.quantidade_parcelas})',
                 valor=parcela.valor,
                 data=date.today(),

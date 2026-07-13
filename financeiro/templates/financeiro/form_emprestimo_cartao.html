@@ -1,7 +1,7 @@
 ﻿{% extends 'financeiro/base.html' %}
 
 {% block title %}Cartão de Crédito{% endblock %}
-{% block page_title %}{% if emprestimo %}Editar Cartão de Crédito{% else %}Novo Cartão de Crédito{% endif %}{% endblock %}
+{% block page_title %}{% if emprestimo %}Editar Compra{% else %}Nova Compra{% endif %}{% endblock %}
 {% block page_subtitle %}Selecione o cartão usado, quem usou, valor e quantidade de parcelas.{% endblock %}
 
 {% block page_actions %}
@@ -11,7 +11,7 @@
 {% block content %}
 <section class="form-card">
     <div class="alert-warning">
-        O campo "Cartão utilizado" mostra apenas contas marcadas com cartão de crédito. Ao marcar uma parcela como paga, o sistema cria automaticamente uma receita na conta escolhida em "Conta recebimento".
+        O campo "Cartão utilizado" mostra apenas contas marcadas com cartão de crédito. Ao marcar uma parcela como paga, o sistema cria automaticamente uma receita na conta escolhida em "Conta de recebimento".
     </div>
 
     <form method="post">

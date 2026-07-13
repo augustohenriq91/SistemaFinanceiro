@@ -44,7 +44,9 @@
             </div>
 
             <div class="sidebar-footer">
+                {% if request.user.is_staff %}
                 <a href="/admin/" class="admin-link">Admin</a>
+                {% endif %}
                 <form method="post" action="{% url 'logout' %}" class="logout-form">
                     {% csrf_token %}
                     <button type="submit" class="admin-link logout-link">Sair</button>
@@ -100,6 +102,153 @@
             });
         });
     })();
+    </script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function(){
+        document.querySelectorAll('select').forEach(function(select){
+            if(select.dataset.customized === 'true') return;
+            if(select.multiple) return;
+            select.dataset.customized = 'true';
+            select.classList.add('native-select-hidden');
+
+            var wrapper = document.createElement('div');
+            wrapper.className = 'custom-select';
+
+            var trigger = document.createElement('button');
+            trigger.type = 'button';
+            trigger.className = 'custom-select-trigger';
+            trigger.setAttribute('aria-haspopup', 'listbox');
+            trigger.setAttribute('aria-expanded', 'false');
+            trigger.disabled = select.disabled;
+
+            var value = document.createElement('span');
+            value.className = 'custom-select-value';
+            value.textContent = select.options[select.selectedIndex] ? select.options[select.selectedIndex].text : '';
+
+            var arrow = document.createElement('span');
+            arrow.className = 'custom-select-arrow';
+            arrow.setAttribute('aria-hidden', 'true');
+
+            trigger.appendChild(value);
+            trigger.appendChild(arrow);
+
+            var menu = document.createElement('div');
+            menu.className = 'custom-select-menu';
+            menu.setAttribute('role', 'listbox');
+
+            Array.prototype.forEach.call(select.options, function(option){
+                var item = document.createElement('button');
+                item.type = 'button';
+                item.className = 'custom-select-option';
+                item.textContent = option.text;
+                item.dataset.value = option.value;
+                item.setAttribute('role', 'option');
+                item.disabled = option.disabled;
+
+                if(option.selected){
+                    item.classList.add('is-selected');
+                    item.setAttribute('aria-selected', 'true');
+                }
+
+                item.addEventListener('click', function(){
+                    select.value = option.value;
+                    value.textContent = option.text;
+                    menu.querySelectorAll('.custom-select-option').forEach(function(button){
+                        button.classList.remove('is-selected');
+                        button.setAttribute('aria-selected', 'false');
+                    });
+                    item.classList.add('is-selected');
+                    item.setAttribute('aria-selected', 'true');
+                    wrapper.classList.remove('is-open');
+                    trigger.setAttribute('aria-expanded', 'false');
+                    select.dispatchEvent(new Event('change', { bubbles: true }));
+                });
+
+                menu.appendChild(item);
+            });
+
+            trigger.addEventListener('click', function(){
+                var shouldOpen = !wrapper.classList.contains('is-open');
+                document.querySelectorAll('.custom-select.is-open').forEach(function(openSelect){
+                    if(openSelect === wrapper) return;
+                    openSelect.classList.remove('is-open');
+                    var openTrigger = openSelect.querySelector('.custom-select-trigger');
+                    if(openTrigger) openTrigger.setAttribute('aria-expanded', 'false');
+                });
+                wrapper.classList.toggle('is-open', shouldOpen);
+                var isOpen = wrapper.classList.contains('is-open');
+                trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            });
+
+            trigger.addEventListener('keydown', function(event){
+                if(event.key === 'Escape'){
+                    wrapper.classList.remove('is-open');
+                    trigger.setAttribute('aria-expanded', 'false');
+                }
+            });
+
+            wrapper.appendChild(trigger);
+            wrapper.appendChild(menu);
+            select.insertAdjacentElement('afterend', wrapper);
+        });
+
+        document.addEventListener('click', function(event){
+            document.querySelectorAll('.custom-select.is-open').forEach(function(wrapper){
+                if(wrapper.contains(event.target)) return;
+                wrapper.classList.remove('is-open');
+                var trigger = wrapper.querySelector('.custom-select-trigger');
+                if(trigger) trigger.setAttribute('aria-expanded', 'false');
+            });
+        });
+
+        function submitForm(form){
+            if(!form || form.dataset.submitting === 'true') return;
+            form.dataset.submitting = 'true';
+            if(form.requestSubmit) form.requestSubmit();
+            else form.submit();
+        }
+
+        document.querySelectorAll('form.filter-row, form.period-form').forEach(function(form){
+            var timers = new Map();
+
+            form.querySelectorAll('select').forEach(function(field){
+                field.addEventListener('change', function(){
+                    submitForm(form);
+                });
+            });
+
+            form.querySelectorAll('input[type="text"], input[type="search"], input:not([type])').forEach(function(field){
+                field.dataset.lastSubmittedValue = field.value || '';
+
+                field.addEventListener('keydown', function(event){
+                    if(event.key === 'Enter'){
+                        event.preventDefault();
+                        submitForm(form);
+                    }
+                });
+
+                field.addEventListener('input', function(){
+                    var isDateField = field.classList.contains('date-mask') || field.name === 'data';
+                    var value = field.value.trim();
+
+                    if(isDateField && value !== '' && value.length < 10) return;
+
+                    clearTimeout(timers.get(field));
+                    timers.set(field, setTimeout(function(){
+                        if(field.dataset.lastSubmittedValue === field.value) return;
+                        field.dataset.lastSubmittedValue = field.value;
+                        submitForm(form);
+                    }, isDateField ? 350 : 700));
+                });
+
+                field.addEventListener('blur', function(){
+                    if(field.dataset.lastSubmittedValue === field.value) return;
+                    field.dataset.lastSubmittedValue = field.value;
+                    submitForm(form);
+                });
+            });
+        });
+    });
     </script>
     {% block extra_js %}{% endblock %}
 

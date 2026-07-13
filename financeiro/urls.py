@@ -10,6 +10,7 @@ urlpatterns = [
     path('receitas/nova/', login_required(views.nova_receita), name='nova_receita'),
     path('receitas/<int:receita_id>/editar/', login_required(views.editar_receita), name='editar_receita'),
     path('receitas/<int:receita_id>/excluir/', login_required(views.excluir_receita), name='excluir_receita'),
+    path('receitas/<int:receita_id>/recebimento/', login_required(views.alternar_recebimento_receita), name='alternar_recebimento_receita'),
     path('despesas/', login_required(views.lista_despesas), name='lista_despesas'),
     path('despesas/nova/', login_required(views.nova_despesa), name='nova_despesa'),
     path('despesas/<int:despesa_id>/editar/', login_required(views.editar_despesa), name='editar_despesa'),
