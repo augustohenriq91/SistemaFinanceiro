@@ -15,6 +15,7 @@ urlpatterns = [
     path('despesas/nova/', login_required(views.nova_despesa), name='nova_despesa'),
     path('despesas/<int:despesa_id>/editar/', login_required(views.editar_despesa), name='editar_despesa'),
     path('despesas/<int:despesa_id>/excluir/', login_required(views.excluir_despesa), name='excluir_despesa'),
+    path('despesas/<int:despesa_id>/pagamento/', login_required(views.alternar_pagamento_despesa), name='alternar_pagamento_despesa'),
     path('contas/', login_required(views.lista_contas), name='lista_contas'),
     path('contas/nova/', login_required(views.nova_conta), name='nova_conta'),
     path('contas/<int:conta_id>/editar/', login_required(views.editar_conta), name='editar_conta'),

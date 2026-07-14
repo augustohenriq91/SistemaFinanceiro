@@ -2,9 +2,10 @@
 from django.contrib import messages
 from django.http import HttpResponse
 from django.core.paginator import Paginator
-from django.db.models import Count, Sum
+from django.db.models import Count, Q, Sum
 from django.db.models.deletion import ProtectedError
 import json
+from uuid import uuid4
 from decimal import Decimal
 from datetime import date, datetime, timedelta
 from urllib.parse import urlencode
@@ -35,6 +36,118 @@ def adicionar_meses(data, meses):
     dias_por_mes = [31, 29 if ano % 4 == 0 and (ano % 100 != 0 or ano % 400 == 0) else 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
     dia = min(data.day, dias_por_mes[mes - 1])
     return data.replace(year=ano, month=mes, day=dia)
+
+
+def fim_do_mes(data_base):
+    return adicionar_meses(data_base.replace(day=1), 1) - timedelta(days=1)
+
+
+def salvar_despesa_com_recorrencia(despesa):
+    if not despesa.despesa_fixa or despesa.tipo_recorrencia == 'unica':
+        despesa.despesa_fixa = False
+        despesa.tipo_recorrencia = 'unica'
+        despesa.quantidade_parcelas = None
+        despesa.parcela_atual = None
+        despesa.data_inicio_parcelamento = None
+        despesa.parcelas_ja_pagas = 0
+        despesa.grupo_recorrencia = ''
+        despesa.save()
+        return
+
+    grupo = despesa.grupo_recorrencia or str(uuid4())
+    descricao_base = despesa.descricao
+    despesa.grupo_recorrencia = grupo
+
+    if despesa.tipo_recorrencia == 'parcelada':
+        quantidade = despesa.quantidade_parcelas or 1
+        data_inicio = despesa.data_inicio_parcelamento or despesa.data
+        parcelas_pagas = min(despesa.parcelas_ja_pagas or 0, quantidade)
+        despesa.data = data_inicio
+        despesa.parcela_atual = 1
+        despesa.descricao = f'{descricao_base} (1/{quantidade})'
+        despesa.pago = parcelas_pagas >= 1
+        despesa.save()
+
+        for numero in range(2, quantidade + 1):
+            Despesa.objects.create(
+                usuario=despesa.usuario,
+                descricao=f'{descricao_base} ({numero}/{quantidade})',
+                valor=despesa.valor,
+                data=adicionar_meses(data_inicio, numero - 1),
+                categoria=despesa.categoria,
+                conta=despesa.conta,
+                pago=numero <= parcelas_pagas,
+                despesa_fixa=True,
+                tipo_recorrencia='parcelada',
+                quantidade_parcelas=quantidade,
+                parcela_atual=numero,
+                data_inicio_parcelamento=data_inicio,
+                parcelas_ja_pagas=parcelas_pagas,
+                grupo_recorrencia=grupo,
+            )
+        return
+
+    despesa.tipo_recorrencia = 'recorrente'
+    despesa.quantidade_parcelas = None
+    despesa.parcela_atual = None
+    despesa.data_inicio_parcelamento = None
+    despesa.parcelas_ja_pagas = 0
+    despesa.save()
+
+
+def garantir_despesas_recorrentes(usuario, ate_data):
+    grupos = (
+        Despesa.objects
+        .filter(
+            usuario=usuario,
+            despesa_fixa=True,
+            tipo_recorrencia='recorrente',
+        )
+        .exclude(grupo_recorrencia='')
+        .values_list('grupo_recorrencia', flat=True)
+        .distinct()
+    )
+
+    for grupo in grupos:
+        modelo = (
+            Despesa.objects
+            .filter(usuario=usuario, grupo_recorrencia=grupo, tipo_recorrencia='recorrente')
+            .order_by('data', 'id')
+            .first()
+        )
+
+        if not modelo or modelo.data > ate_data:
+            continue
+
+        meses = 1
+        data_lancamento = adicionar_meses(modelo.data, meses)
+
+        while data_lancamento <= ate_data and meses <= 240:
+            ja_existe = Despesa.objects.filter(
+                usuario=usuario,
+                grupo_recorrencia=grupo,
+                data__year=data_lancamento.year,
+                data__month=data_lancamento.month,
+            ).exists()
+
+            if not ja_existe:
+                Despesa.objects.create(
+                    usuario=usuario,
+                    descricao=modelo.descricao,
+                    valor=modelo.valor,
+                    data=data_lancamento,
+                    categoria=modelo.categoria,
+                    conta=modelo.conta,
+                    pago=False,
+                    despesa_fixa=True,
+                    tipo_recorrencia='recorrente',
+                    quantidade_parcelas=None,
+                    parcela_atual=None,
+                    grupo_recorrencia=grupo,
+                )
+
+            meses += 1
+            data_lancamento = adicionar_meses(modelo.data, meses)
 
 
 def data_com_dia_seguro(data_base, dia):
@@ -152,6 +265,7 @@ def dashboard(request):
     usuario = request.user
     ano_selecionado, mes_selecionado = periodo_request(request)
     data_periodo = date(ano_selecionado, mes_selecionado, 1)
+    garantir_despesas_recorrentes(usuario, fim_do_mes(data_periodo))
 
     receitas_periodo = Receita.objects.filter(usuario=usuario, data__year=ano_selecionado, data__month=mes_selecionado)
     despesas_periodo = Despesa.objects.filter(usuario=usuario, data__year=ano_selecionado, data__month=mes_selecionado)
@@ -307,6 +421,7 @@ def relatorios(request):
         ano = date.today().year
 
     ano = max(2000, min(ano, 2100))
+    garantir_despesas_recorrentes(usuario, date(ano, 12, 31))
     linhas_mensais = []
 
     for numero_mes, nome_mes in MESES:
@@ -386,6 +501,7 @@ def baixar_backup(request):
                 'nome',
                 'tipo',
                 'saldo_inicial',
+                'banco_principal',
                 'possui_cartao_credito',
                 'dias_antes_fechamento_fatura',
                 'dia_vencimento_fatura',
@@ -473,6 +589,13 @@ def lista_receitas(request):
         if dt:
             receitas = receitas.filter(data=dt)
 
+    resumo_receitas = receitas.aggregate(
+        total_filtrado=Sum('valor'),
+        total_recebido=Sum('valor', filter=Q(recebido=True)),
+        total_pendente=Sum('valor', filter=Q(recebido=False)),
+        quantidade=Count('id'),
+    )
+
     categorias = Categoria.objects.filter(usuario=usuario, tipo='receita').order_by('nome')
     contas = Conta.objects.filter(usuario=usuario).order_by('nome')
     paginator = Paginator(receitas, 10)
@@ -490,18 +613,26 @@ def lista_receitas(request):
         'filtro_conta': conta_id,
         'filtro_status': status,
         'filtro_data': data,
+        'total_receitas_filtrado': resumo_receitas['total_filtrado'] or 0,
+        'total_receitas_recebidas': resumo_receitas['total_recebido'] or 0,
+        'total_receitas_pendentes': resumo_receitas['total_pendente'] or 0,
+        'quantidade_receitas_filtradas': resumo_receitas['quantidade'] or 0,
     }
 
     return render(request, 'financeiro/lista_receitas.html', contexto)
 
 def lista_despesas(request):
     usuario = request.user
-    despesas = Despesa.objects.filter(usuario=usuario).order_by('-data')
     q = request.GET.get('q', '').strip()
     categoria_id = request.GET.get('categoria', '')
     conta_id = request.GET.get('conta', '')
     status = request.GET.get('status', '')
     data = request.GET.get('data', '')
+    data_filtrada = interpretar_data_filtro(data) if data else None
+
+    garantir_despesas_recorrentes(usuario, data_filtrada or date.today())
+
+    despesas = Despesa.objects.filter(usuario=usuario).order_by('-data')
 
     if q:
         despesas = despesas.filter(descricao__icontains=q)
@@ -514,9 +645,15 @@ def lista_despesas(request):
     elif status == 'pendente':
         despesas = despesas.filter(pago=False)
     if data:
-        dt = interpretar_data_filtro(data)
-        if dt:
-            despesas = despesas.filter(data=dt)
+        if data_filtrada:
+            despesas = despesas.filter(data=data_filtrada)
+
+    resumo_despesas = despesas.aggregate(
+        total_filtrado=Sum('valor'),
+        total_pago=Sum('valor', filter=Q(pago=True)),
+        total_pendente=Sum('valor', filter=Q(pago=False)),
+        quantidade=Count('id'),
+    )
 
     categorias = Categoria.objects.filter(usuario=usuario, tipo='despesa').order_by('nome')
     contas = Conta.objects.filter(usuario=usuario).order_by('nome')
@@ -535,6 +672,10 @@ def lista_despesas(request):
         'filtro_conta': conta_id,
         'filtro_status': status,
         'filtro_data': data,
+        'total_despesas_filtrado': resumo_despesas['total_filtrado'] or 0,
+        'total_despesas_pagas': resumo_despesas['total_pago'] or 0,
+        'total_despesas_pendentes': resumo_despesas['total_pendente'] or 0,
+        'quantidade_despesas_filtradas': resumo_despesas['quantidade'] or 0,
     }
 
     return render(request, 'financeiro/lista_despesas.html', contexto)
@@ -608,7 +749,7 @@ def nova_despesa(request):
         if form.is_valid():
             despesa = form.save(commit=False)
             despesa.usuario = request.user
-            despesa.save()
+            salvar_despesa_com_recorrencia(despesa)
             return redirect('lista_despesas')
     else:
         form = DespesaForm(user=request.user)
@@ -651,6 +792,18 @@ def excluir_despesa(request, despesa_id):
 
     return render(request, 'financeiro/confirmar_exclusao_despesa.html', contexto)
 
+def alternar_pagamento_despesa(request, despesa_id):
+    despesa = get_object_or_404(Despesa, id=despesa_id, usuario=request.user)
+
+    if request.method == 'POST':
+        despesa.pago = not despesa.pago
+        despesa.save(update_fields=['pago'])
+
+    proxima_pagina = request.POST.get('next') or 'lista_despesas'
+    if not proxima_pagina.startswith('/'):
+        proxima_pagina = 'lista_despesas'
+    return redirect(proxima_pagina)
+
 def lista_contas(request):
     usuario = request.user
     contas = Conta.objects.filter(usuario=usuario).order_by('nome')
@@ -666,6 +819,27 @@ def lista_contas(request):
         contas = contas.filter(possui_cartao_credito=True)
     elif cartao == 'nao':
         contas = contas.filter(possui_cartao_credito=False)
+
+    contas_filtradas = contas
+    contas_ids = list(contas_filtradas.values_list('id', flat=True))
+    total_saldo_inicial = contas_filtradas.aggregate(total=Sum('saldo_inicial'))['total'] or 0
+    total_receitas_filtradas = Receita.objects.filter(
+        usuario=usuario,
+        conta_id__in=contas_ids,
+        recebido=True,
+    ).aggregate(total=Sum('valor'))['total'] or 0
+    total_despesas_filtradas = Despesa.objects.filter(
+        usuario=usuario,
+        conta_id__in=contas_ids,
+        pago=True,
+    ).aggregate(total=Sum('valor'))['total'] or 0
+    saldo_contas_filtradas = total_saldo_inicial + total_receitas_filtradas - total_despesas_filtradas
+    resumo_contas = contas_filtradas.aggregate(
+        quantidade=Count('id'),
+        principais=Count('id', filter=Q(banco_principal=True)),
+        com_cartao=Count('id', filter=Q(possui_cartao_credito=True)),
+        sem_cartao=Count('id', filter=Q(possui_cartao_credito=False)),
+    )
 
     paginator = Paginator(contas, 10)
     page_obj = paginator.get_page(request.GET.get('page'))
@@ -703,9 +877,23 @@ def lista_contas(request):
         'filtro_q': q,
         'filtro_tipo': tipo,
         'filtro_cartao': cartao,
+        'total_contas_filtradas': resumo_contas['quantidade'] or 0,
+        'total_contas_principais': resumo_contas['principais'] or 0,
+        'total_contas_com_cartao': resumo_contas['com_cartao'] or 0,
+        'total_contas_sem_cartao': resumo_contas['sem_cartao'] or 0,
+        'saldo_contas_filtradas': saldo_contas_filtradas,
     }
 
     return render(request, 'financeiro/lista_contas.html', contexto)
+
+
+def manter_apenas_um_banco_principal(usuario, conta):
+    if conta.banco_principal:
+        Conta.objects.filter(
+            usuario=usuario,
+            banco_principal=True,
+        ).exclude(id=conta.id).update(banco_principal=False)
+
 
 def nova_conta(request):
     if request.method == 'POST':
@@ -715,6 +903,7 @@ def nova_conta(request):
             conta = form.save(commit=False)
             conta.usuario = request.user
             conta.save()
+            manter_apenas_um_banco_principal(request.user, conta)
             return redirect('lista_contas')
     else:
         form = ContaForm()
@@ -732,7 +921,8 @@ def editar_conta(request, conta_id):
         form = ContaForm(request.POST, instance=conta)
 
         if form.is_valid():
-            form.save()
+            conta = form.save()
+            manter_apenas_um_banco_principal(request.user, conta)
             return redirect('lista_contas')
     else:
         form = ContaForm(instance=conta)
@@ -772,16 +962,22 @@ def lista_categorias(request):
     if tipo:
         categorias = categorias.filter(tipo=tipo)
 
-    paginator = Paginator(categorias, 10)
-    page_obj = paginator.get_page(request.GET.get('page'))
-    querystring = urlencode({k: v for k, v in request.GET.items() if v and k != 'page'})
+    resumo_categorias = categorias.aggregate(
+        quantidade=Count('id'),
+        receitas=Count('id', filter=Q(tipo='receita')),
+        despesas=Count('id', filter=Q(tipo='despesa')),
+    )
+    total_tipos_categorias = int(bool(resumo_categorias['receitas'])) + int(bool(resumo_categorias['despesas']))
 
     contexto = {
-        'categorias': page_obj,
-        'page_obj': page_obj,
-        'querystring': querystring,
+        'categorias_receitas': categorias.filter(tipo='receita'),
+        'categorias_despesas': categorias.filter(tipo='despesa'),
         'filtro_q': q,
         'filtro_tipo': tipo,
+        'total_categorias_filtradas': resumo_categorias['quantidade'] or 0,
+        'total_categorias_receitas': resumo_categorias['receitas'] or 0,
+        'total_categorias_despesas': resumo_categorias['despesas'] or 0,
+        'total_tipos_categorias': total_tipos_categorias,
     }
 
     return render(request, 'financeiro/lista_categorias.html', contexto)
@@ -855,7 +1051,22 @@ def lista_emprestimos_cartao(request):
 
     querystring = urlencode({k: v for k, v in request.GET.items() if v and k != 'page'})
 
+    emprestimos = emprestimos.annotate(
+        total_parcelas_count=Count('parcelas'),
+        parcelas_pendentes_count=Count('parcelas', filter=Q(parcelas__pago=False)),
+    )
     emprestimos_filtrados_ids = emprestimos.values_list('id', flat=True)
+    emprestimos_abertos = emprestimos.filter(parcelas_pendentes_count__gt=0)
+    emprestimos_quitados = emprestimos.filter(
+        total_parcelas_count__gt=0,
+        parcelas_pendentes_count=0,
+    )
+
+    if status == 'pago':
+        emprestimos_abertos = EmprestimoCartao.objects.none()
+    elif status == 'pendente':
+        emprestimos_quitados = EmprestimoCartao.objects.none()
+
     parcelas = ParcelaEmprestimo.objects.select_related(
         'emprestimo',
         'emprestimo__cartao_utilizado',
@@ -884,17 +1095,25 @@ def lista_emprestimos_cartao(request):
         emprestimo_id__in=emprestimos_filtrados_ids,
         pago=False,
     ).aggregate(total=Sum('valor'))['total'] or 0
+    total_emprestimos_filtrados = emprestimos.count()
+    total_emprestimos_abertos = emprestimos_abertos.count()
+    total_emprestimos_quitados = emprestimos_quitados.count()
     cartoes = Conta.objects.filter(usuario=usuario, possui_cartao_credito=True).order_by('nome')
 
     contexto = {
-        'emprestimos': emprestimos,
+        'emprestimos': emprestimos_abertos,
+        'emprestimos_quitados': emprestimos_quitados,
         'parcelas_pendentes': parcelas_pendentes,
         'parcelas_pagas': parcelas_pagas,
         'total_emprestado': total_emprestado,
         'total_pago': total_pago,
         'total_pendente': total_pendente,
+        'total_emprestimos_filtrados': total_emprestimos_filtrados,
+        'total_emprestimos_abertos': total_emprestimos_abertos,
+        'total_emprestimos_quitados': total_emprestimos_quitados,
         'cartoes': cartoes,
         'querystring': querystring,
+        'current_url': request.get_full_path(),
         'filtro_q': q,
         'filtro_cartao': cartao_id,
         'filtro_status': status,
@@ -985,6 +1204,9 @@ def excluir_emprestimo_cartao(request, emprestimo_id):
 
 def alternar_pagamento_parcela(request, parcela_id):
     parcela = get_object_or_404(ParcelaEmprestimo, id=parcela_id, emprestimo__usuario=request.user)
+    proxima_pagina = request.POST.get('next') or 'lista_emprestimos_cartao'
+    if not proxima_pagina.startswith('/') or proxima_pagina.startswith('//'):
+        proxima_pagina = 'lista_emprestimos_cartao'
 
     if request.method == 'POST':
         if parcela.pago:
@@ -999,7 +1221,7 @@ def alternar_pagamento_parcela(request, parcela_id):
                     request,
                     'Defina uma conta de recebimento antes de marcar esta parcela como paga.'
                 )
-                return redirect('lista_emprestimos_cartao')
+                return redirect(proxima_pagina)
 
             categoria, _ = Categoria.objects.get_or_create(
                 usuario=request.user,
@@ -1023,4 +1245,4 @@ def alternar_pagamento_parcela(request, parcela_id):
 
         parcela.save()
 
-    return redirect('lista_emprestimos_cartao')
+    return redirect(proxima_pagina)

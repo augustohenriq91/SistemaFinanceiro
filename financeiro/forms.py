@@ -132,33 +132,109 @@ class DespesaForm(forms.ModelForm):
                 tipo='despesa',
             ).order_by('nome')
             self.fields['conta'].queryset = Conta.objects.filter(usuario=user).order_by('nome')
+        self.fields['data_inicio_parcelamento'].required = False
+        self.fields['parcelas_ja_pagas'].required = False
 
     class Meta:
         model = Despesa
-        fields = ['descricao', 'valor', 'data', 'categoria', 'conta', 'pago']
+        fields = [
+            'descricao',
+            'valor',
+            'data',
+            'categoria',
+            'conta',
+            'despesa_fixa',
+            'tipo_recorrencia',
+            'quantidade_parcelas',
+            'data_inicio_parcelamento',
+            'parcelas_ja_pagas',
+        ]
         widgets = {
             'data': forms.TextInput(attrs={'class': 'date-mask', 'placeholder': 'DD/MM/YYYY'}),
+            'data_inicio_parcelamento': forms.TextInput(attrs={
+                'class': 'date-mask js-data-inicio-parcelamento',
+                'placeholder': 'DD/MM/YYYY',
+            }),
             'valor': forms.TextInput(attrs={
                 'inputmode': 'decimal',
                 'placeholder': '0,00',
                 'class': 'currency',
                 'autocomplete': 'off',
             }),
+            'despesa_fixa': forms.CheckboxInput(attrs={'class': 'js-despesa-fixa'}),
+            'tipo_recorrencia': forms.Select(attrs={'class': 'js-tipo-recorrencia'}),
+            'quantidade_parcelas': forms.NumberInput(attrs={
+                'min': '2',
+                'placeholder': 'Ex: 12',
+                'class': 'js-quantidade-parcelas',
+            }),
+            'parcelas_ja_pagas': forms.NumberInput(attrs={
+                'min': '0',
+                'placeholder': 'Ex: 8',
+                'class': 'js-parcelas-ja-pagas',
+            }),
         }
         help_texts = {
             'valor': 'Digite o valor usando vírgula para centavos. Exemplo: 250,90.',
             'data': 'Digite DD/MM/AAAA. Atalhos aceitos: 0907 vira 09/07 do ano atual.',
+            'tipo_recorrencia': 'Use parcelada para criar lançamentos mensais com quantidade definida, ou repetir sempre para despesas fixas contínuas.',
+            'quantidade_parcelas': 'Informe em quantos meses esta despesa será lançada.',
+            'data_inicio_parcelamento': 'Use a data da primeira parcela. Exemplo: início do financiamento ou da compra parcelada.',
+            'parcelas_ja_pagas': 'Informe quantas parcelas desse parcelamento você já pagou antes de cadastrar no sistema.',
         }
         labels = {
             'descricao': 'Descrição',
+            'despesa_fixa': 'Despesa fixa?',
+            'tipo_recorrencia': 'Como lançar esta despesa?',
+            'quantidade_parcelas': 'Quantidade de parcelas',
+            'data_inicio_parcelamento': 'Data de início da despesa',
+            'parcelas_ja_pagas': 'Parcelas já pagas',
         }
         field_classes = {
             'valor': BRLDecimalField,
             'data': BRLDateField,
+            'data_inicio_parcelamento': BRLDateField,
         }
 
     def clean_valor(self):
         return parse_valor_brl(self.cleaned_data.get('valor'))
+
+    def clean(self):
+        cleaned_data = super().clean()
+        despesa_fixa = cleaned_data.get('despesa_fixa')
+        tipo_recorrencia = cleaned_data.get('tipo_recorrencia')
+        quantidade_parcelas = cleaned_data.get('quantidade_parcelas')
+        data_inicio_parcelamento = cleaned_data.get('data_inicio_parcelamento')
+        parcelas_ja_pagas = cleaned_data.get('parcelas_ja_pagas') or 0
+
+        if not despesa_fixa:
+            cleaned_data['tipo_recorrencia'] = 'unica'
+            cleaned_data['quantidade_parcelas'] = None
+            cleaned_data['data_inicio_parcelamento'] = None
+            cleaned_data['parcelas_ja_pagas'] = 0
+            return cleaned_data
+
+        if tipo_recorrencia == 'unica':
+            self.add_error('tipo_recorrencia', 'Escolha se a despesa fixa será parcelada ou repetida sempre.')
+
+        if tipo_recorrencia == 'parcelada':
+            if not quantidade_parcelas:
+                self.add_error('quantidade_parcelas', 'Informe a quantidade de parcelas.')
+            elif quantidade_parcelas < 2:
+                self.add_error('quantidade_parcelas', 'Informe pelo menos 2 parcelas.')
+            if not data_inicio_parcelamento:
+                self.add_error('data_inicio_parcelamento', 'Informe a data de início da despesa parcelada.')
+            if parcelas_ja_pagas < 0:
+                self.add_error('parcelas_ja_pagas', 'Informe zero ou mais parcelas pagas.')
+            if quantidade_parcelas and parcelas_ja_pagas > quantidade_parcelas:
+                self.add_error('parcelas_ja_pagas', 'As parcelas pagas não podem ser maiores que a quantidade total.')
+
+        if tipo_recorrencia == 'recorrente':
+            cleaned_data['quantidade_parcelas'] = None
+            cleaned_data['data_inicio_parcelamento'] = None
+            cleaned_data['parcelas_ja_pagas'] = 0
+
+        return cleaned_data
 
 class ContaForm(forms.ModelForm):
     class Meta:
@@ -167,6 +243,7 @@ class ContaForm(forms.ModelForm):
             'nome',
             'tipo',
             'saldo_inicial',
+            'banco_principal',
             'possui_cartao_credito',
             'dias_antes_fechamento_fatura',
             'dia_vencimento_fatura',
@@ -193,6 +270,7 @@ class ContaForm(forms.ModelForm):
             'nome': 'Nome',
             'tipo': 'Tipo',
             'saldo_inicial': 'Saldo inicial',
+            'banco_principal': 'Marcar como banco principal',
             'possui_cartao_credito': 'Possui cartão de crédito?',
             'dias_antes_fechamento_fatura': 'Dias antes do vencimento da fatura',
             'dia_vencimento_fatura': 'Dia que vence a fatura',

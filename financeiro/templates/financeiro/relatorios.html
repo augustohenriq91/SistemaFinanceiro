@@ -1,36 +1,40 @@
 {% extends 'financeiro/base.html' %}
 {% load currency_tags %}
 
-{% block title %}Relatórios{% endblock %}
-{% block page_title %}Relatórios{% endblock %}
-{% block page_subtitle %}Analise receitas, despesas, categorias e saldo por período.{% endblock %}
+{% block title %}Relat&oacute;rios{% endblock %}
+{% block page_title %}Relat&oacute;rios{% endblock %}
+{% block page_subtitle %}Analise seus resultados financeiros por per&iacute;odo, categoria e conta.{% endblock %}
 
 {% block content %}
 <section class="panel period-panel">
     <form method="get" class="period-form">
-        <label for="ano">Ano do relatório</label>
+        <label for="ano">Ano do relat&oacute;rio</label>
         <select name="ano" id="ano" class="filter-select">
             {% for item in anos %}
                 <option value="{{ item }}" {% if ano == item %}selected{% endif %}>{{ item }}</option>
             {% endfor %}
         </select>
-        <button type="submit" class="btn btn-primary">Atualizar</button>
+        <button type="submit" class="btn btn-secondary">Atualizar</button>
     </form>
 </section>
 
-<div class="cards stats-cards">
-    <div class="card">
-        <div class="card-label">Receitas no ano</div>
-        <div class="card-value positive">{{ total_receitas|format_brl }}</div>
-    </div>
-    <div class="card">
-        <div class="card-label">Despesas no ano</div>
-        <div class="card-value negative">{{ total_despesas|format_brl }}</div>
-    </div>
-    <div class="card">
-        <div class="card-label">Saldo anual</div>
-        <div class="card-value {% if saldo_anual < 0 %}negative{% else %}positive{% endif %}">{{ saldo_anual|format_brl }}</div>
-    </div>
+<div class="list-summary-cards">
+    <article class="list-summary-card positive">
+        <span>Receitas no ano</span>
+        <strong>{{ total_receitas|format_brl }}</strong>
+    </article>
+    <article class="list-summary-card negative">
+        <span>Despesas no ano</span>
+        <strong>{{ total_despesas|format_brl }}</strong>
+    </article>
+    <article class="list-summary-card {% if saldo_anual < 0 %}negative{% else %}primary{% endif %}">
+        <span>Saldo anual</span>
+        <strong>{{ saldo_anual|format_brl }}</strong>
+    </article>
+    <article class="list-summary-card neutral">
+        <span>Per&iacute;odo</span>
+        <strong>{{ ano }}</strong>
+    </article>
 </div>
 
 <section class="panel dashboard-box dashboard-box-card">
@@ -38,7 +42,7 @@
     <div class="table-wrap">
         <table>
             <tr>
-                <th>Mês</th>
+                <th>M&ecirc;s</th>
                 <th>Receitas</th>
                 <th>Despesas</th>
                 <th>Saldo</th>

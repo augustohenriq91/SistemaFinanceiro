@@ -2,7 +2,7 @@
 
 {% block title %}Despesa{% endblock %}
 {% block page_title %}{% if despesa %}Editar Despesa{% else %}Nova Despesa{% endif %}{% endblock %}
-{% block page_subtitle %}Registre ou atualize uma saida financeira.{% endblock %}
+{% block page_subtitle %}Registre pagamentos, vencimentos e compromissos financeiros.{% endblock %}
 
 {% block page_actions %}
     <a href="/despesas/" class="btn btn-light"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></span>Voltar</a>
@@ -12,7 +12,87 @@
 <section class="form-card">
     <form method="post">
         {% csrf_token %}
-        {{ form.as_p }}
+        {{ form.non_field_errors }}
+
+        <p>
+            {{ form.descricao.label_tag }}
+            {{ form.descricao }}
+            {{ form.descricao.errors }}
+        </p>
+
+        <p>
+            {{ form.valor.label_tag }}
+            {{ form.valor }}
+            {{ form.valor.errors }}
+            {% if form.valor.help_text %}
+                <small class="form-help">{{ form.valor.help_text }}</small>
+            {% endif %}
+        </p>
+
+        <p>
+            {{ form.data.label_tag }}
+            {{ form.data }}
+            {{ form.data.errors }}
+            {% if form.data.help_text %}
+                <small class="form-help">{{ form.data.help_text }}</small>
+            {% endif %}
+        </p>
+
+        <p>
+            {{ form.categoria.label_tag }}
+            {{ form.categoria }}
+            {{ form.categoria.errors }}
+        </p>
+
+        <p>
+            {{ form.conta.label_tag }}
+            {{ form.conta }}
+            {{ form.conta.errors }}
+        </p>
+
+        <div class="checkbox-line">
+            {{ form.despesa_fixa }}
+            {{ form.despesa_fixa.label_tag }}
+        </div>
+        {{ form.despesa_fixa.errors }}
+
+        <div id="despesa-recorrencia-fields" class="nested-fields recurring-fields">
+            <div class="recurring-fields-heading">
+                <span class="section-kicker">Parcelamento</span>
+                <p>Use estes campos quando a despesa já existe há alguns meses ou será repetida em parcelas.</p>
+            </div>
+
+            <div class="recurring-fields-grid">
+                <p>
+                    {{ form.tipo_recorrencia.label_tag }}
+                    {{ form.tipo_recorrencia }}
+                    {{ form.tipo_recorrencia.errors }}
+                </p>
+
+                <p id="quantidade-parcelas-field">
+                    {{ form.quantidade_parcelas.label_tag }}
+                    {{ form.quantidade_parcelas }}
+                    {{ form.quantidade_parcelas.errors }}
+                    <small class="form-help">Total contratado. Ex: 48.</small>
+                </p>
+
+                <p id="data-inicio-parcelamento-field">
+                    {{ form.data_inicio_parcelamento.label_tag }}
+                    {{ form.data_inicio_parcelamento }}
+                    {{ form.data_inicio_parcelamento.errors }}
+                    <small class="form-help">Data da primeira parcela.</small>
+                </p>
+
+                <p id="parcelas-ja-pagas-field">
+                    {{ form.parcelas_ja_pagas.label_tag }}
+                    {{ form.parcelas_ja_pagas }}
+                    {{ form.parcelas_ja_pagas.errors }}
+                    <small class="form-help">Quantas já foram pagas antes do cadastro.</small>
+                </p>
+            </div>
+
+            <div id="parcelas-pagas-estimativa" class="recurring-estimate" aria-live="polite"></div>
+        </div>
 
         <div class="actions">
             <button type="submit" class="btn btn-danger"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></span>Salvar Despesa</button>
@@ -20,4 +100,98 @@
         </div>
     </form>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+    var fixedInput = document.getElementById('id_despesa_fixa');
+    var typeInput = document.getElementById('id_tipo_recorrencia');
+    var quantityInput = document.getElementById('id_quantidade_parcelas');
+    var startDateInput = document.getElementById('id_data_inicio_parcelamento');
+    var paidInput = document.getElementById('id_parcelas_ja_pagas');
+    var estimateText = document.getElementById('parcelas-pagas-estimativa');
+
+    if(!fixedInput || !typeInput || !quantityInput || !startDateInput || !paidInput) return;
+
+    var recurringFields = document.getElementById('despesa-recorrencia-fields');
+    var quantityRow = document.getElementById('quantidade-parcelas-field');
+    var startDateRow = document.getElementById('data-inicio-parcelamento-field');
+    var paidRow = document.getElementById('parcelas-ja-pagas-field');
+
+    function parseDateBr(value){
+        var parts = (value || '').split('/');
+        if(parts.length !== 3) return null;
+        var day = parseInt(parts[0], 10);
+        var month = parseInt(parts[1], 10) - 1;
+        var year = parseInt(parts[2], 10);
+        if(!day || month < 0 || !year) return null;
+        var parsed = new Date(year, month, day);
+        if(parsed.getFullYear() !== year || parsed.getMonth() !== month || parsed.getDate() !== day) return null;
+        return parsed;
+    }
+
+    function addMonths(date, months){
+        var result = new Date(date.getFullYear(), date.getMonth() + months, 1);
+        var lastDay = new Date(result.getFullYear(), result.getMonth() + 1, 0).getDate();
+        result.setDate(Math.min(date.getDate(), lastDay));
+        return result;
+    }
+
+    function updateInstallmentEstimate(){
+        if(!estimateText) return;
+        var isInstallment = fixedInput.checked && typeInput.value === 'parcelada';
+        var startDate = parseDateBr(startDateInput.value);
+        var quantity = parseInt(quantityInput.value || '0', 10);
+
+        if(!isInstallment || !startDate || !quantity){
+            estimateText.textContent = '';
+            return;
+        }
+
+        var today = new Date();
+        today.setHours(0, 0, 0, 0);
+        var dueCount = 0;
+
+        for(var index = 0; index < quantity; index++){
+            if(addMonths(startDate, index) <= today) dueCount++;
+        }
+
+        estimateText.textContent = 'Pela data de início, até hoje existem ' + dueCount + ' parcela' + (dueCount === 1 ? '' : 's') + ' vencida' + (dueCount === 1 ? '' : 's') + '.';
+    }
+
+    function updateRecurringFields(){
+        var isFixed = fixedInput.checked;
+        var isInstallment = typeInput.value === 'parcelada';
+
+        if(recurringFields) recurringFields.style.display = isFixed ? '' : 'none';
+        if(quantityRow) quantityRow.hidden = !isFixed || !isInstallment;
+        if(startDateRow) startDateRow.hidden = !isFixed || !isInstallment;
+        if(paidRow) paidRow.hidden = !isFixed || !isInstallment;
+
+        if(!isFixed){
+            typeInput.value = 'unica';
+            quantityInput.value = '';
+            startDateInput.value = '';
+            paidInput.value = '0';
+        }else if(typeInput.value === 'unica'){
+            typeInput.value = 'parcelada';
+        }
+
+        if(typeInput.value !== 'parcelada'){
+            quantityInput.value = '';
+            startDateInput.value = '';
+            paidInput.value = '0';
+        }
+
+        updateInstallmentEstimate();
+    }
+
+    fixedInput.addEventListener('change', updateRecurringFields);
+    typeInput.addEventListener('change', updateRecurringFields);
+    quantityInput.addEventListener('input', updateInstallmentEstimate);
+    startDateInput.addEventListener('input', updateInstallmentEstimate);
+    updateRecurringFields();
+});
+</script>
 {% endblock %}

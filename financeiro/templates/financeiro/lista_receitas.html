@@ -3,7 +3,7 @@
 
 {% block title %}Receitas{% endblock %}
 {% block page_title %}Receitas{% endblock %}
-{% block page_subtitle %}Entradas cadastradas no sistema.{% endblock %}
+{% block page_subtitle %}Acompanhe entradas recebidas, pendentes e lançamentos previstos.{% endblock %}
 
 {% block page_actions %}
     <a href="/receitas/nova/" class="btn btn-success"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></span>Nova Receita</a>
@@ -33,6 +33,26 @@
         <input type="text" name="data" value="{{ filtro_data }}" class="filter-date date-mask" placeholder="DD/MM/YYYY">
         <button type="submit" class="btn btn-secondary" data-icon="filter"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9v7l4 2v-9z"></path></svg></span>Filtrar</button>
     </form>
+
+    <div class="list-summary-cards">
+        <article class="list-summary-card positive">
+            <span>Receitas recebidas</span>
+            <strong>{{ total_receitas_recebidas|format_brl }}</strong>
+        </article>
+        <article class="list-summary-card warning">
+            <span>Receitas pendentes</span>
+            <strong>{{ total_receitas_pendentes|format_brl }}</strong>
+        </article>
+        <article class="list-summary-card primary">
+            <span>Total filtrado</span>
+            <strong>{{ total_receitas_filtrado|format_brl }}</strong>
+        </article>
+        <article class="list-summary-card neutral">
+            <span>Lançamentos</span>
+            <strong>{{ quantidade_receitas_filtradas }}</strong>
+        </article>
+    </div>
+
     <div class="table-wrap">
         <table>
             <tr>
@@ -60,7 +80,7 @@
                     {% endif %}
                 </td>
                 <td>
-                    <div class="actions">
+                    <div class="actions status-actions">
                         <form method="post" action="/receitas/{{ receita.id }}/recebimento/" class="inline-form">
                             {% csrf_token %}
                             <input type="hidden" name="next" value="{{ request.get_full_path }}">

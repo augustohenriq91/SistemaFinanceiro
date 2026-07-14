@@ -45,6 +45,13 @@
         return normalized.replace('.', ',');
     }
 
+    function isZeroCurrency(value) {
+        var normalized = normalizeCurrencyValue(value);
+        if (!normalized) return false;
+        var number = parseFloat(normalized);
+        return !isNaN(number) && number === 0;
+    }
+
     // sanitize input while editing: allow digits and one comma/dot
     function sanitizeEditingValue(value) {
         if (value === null || value === undefined) return '';
@@ -88,7 +95,7 @@
         }
 
         el.addEventListener('focus', function () {
-            el.value = unformatForEdit(el.value);
+            el.value = isZeroCurrency(el.value) ? '' : unformatForEdit(el.value);
             // place caret at end
             setTimeout(function () { try { el.setSelectionRange(el.value.length, el.value.length); } catch (e) {} }, 0);
         });
@@ -98,8 +105,12 @@
         });
 
         el.addEventListener('blur', function () {
-            // if empty -> keep empty
-            if (!el.value) return;
+            if (!el.value) {
+                if (el.name === 'saldo_inicial') {
+                    el.value = formatBRL('0');
+                }
+                return;
+            }
             el.value = formatBRL(el.value);
         });
     });

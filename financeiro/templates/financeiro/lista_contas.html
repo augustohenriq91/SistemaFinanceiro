@@ -3,10 +3,10 @@
 
 {% block title %}Contas{% endblock %}
 {% block page_title %}Contas{% endblock %}
-{% block page_subtitle %}Acompanhe saldos por banco, carteira ou investimento.{% endblock %}
+{% block page_subtitle %}Gerencie saldos, bancos, carteiras e contas com cartão de crédito.{% endblock %}
 
 {% block page_actions %}
-    <a href="/contas/nova/" class="btn btn-success"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></span>Adicionar conta</a>
+    <a href="/contas/nova/" class="btn btn-success"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></span>Nova Conta</a>
 {% endblock %}
 
 {% block content %}
@@ -26,48 +26,92 @@
         </select>
         <button type="submit" class="btn btn-secondary" data-icon="filter"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9v7l4 2v-9z"></path></svg></span>Filtrar</button>
     </form>
+
+    <div class="list-summary-cards">
+        <article class="list-summary-card primary">
+            <span>Saldo filtrado</span>
+            <strong>{{ saldo_contas_filtradas|format_brl }}</strong>
+        </article>
+        <article class="list-summary-card positive">
+            <span>Com cartão</span>
+            <strong>{{ total_contas_com_cartao }}</strong>
+        </article>
+        <article class="list-summary-card neutral">
+            <span>Banco principal</span>
+            <strong>{{ total_contas_principais }}</strong>
+        </article>
+        <article class="list-summary-card warning">
+            <span>Contas filtradas</span>
+            <strong>{{ total_contas_filtradas }}</strong>
+        </article>
+    </div>
 </section>
 
 <div class="account-grid">
     {% for item in contas_com_saldo %}
-    <section class="card account-card">
-        <h2>{{ item.conta.nome }}</h2>
-        <div class="account-type">{{ item.conta.get_tipo_display }}</div>
+    <section class="card account-card account-card--compact" data-id="{{ item.conta.id }}">
+        <div class="account-summary" tabindex="0" role="button" aria-expanded="false">
+            <div class="account-summary-main">
+                <h2>{{ item.conta.nome }}</h2>
+                <div class="account-type">{{ item.conta.get_tipo_display }}</div>
+                <div class="account-chip-row">
+                    {% if item.conta.banco_principal %}
+                        <span class="account-chip positive">Principal</span>
+                    {% endif %}
+                    {% if item.conta.possui_cartao_credito %}
+                        <span class="account-chip">Cartão</span>
+                    {% endif %}
+                </div>
+            </div>
 
-        <div class="account-line">
-            <span>Saldo inicial</span>
-            <strong>{{ item.conta.saldo_inicial|format_brl }}</strong>
-        </div>
-        <div class="account-line">
-            <span>Receitas</span>
-            <strong class="positive">{{ item.total_receitas|format_brl }}</strong>
-        </div>
-        <div class="account-line">
-            <span>Despesas</span>
-            <strong class="negative">{{ item.total_despesas|format_brl }}</strong>
+            <div class="account-summary-aside">
+                <span>Saldo atual</span>
+                <strong>{{ item.saldo_atual|format_brl }}</strong>
+                <button type="button" class="btn btn-light btn-small account-toggle-details">Detalhes</button>
+            </div>
         </div>
 
-        <div class="account-line">
-            <span>Cartão de crédito</span>
-            <strong>{% if item.conta.possui_cartao_credito %}Sim{% else %}Não{% endif %}</strong>
-        </div>
+        <div class="account-details">
+            <div class="account-line">
+                <span>Saldo inicial</span>
+                <strong>{{ item.conta.saldo_inicial|format_brl }}</strong>
+            </div>
+            <div class="account-line">
+                <span>Receitas</span>
+                <strong class="positive">{{ item.total_receitas|format_brl }}</strong>
+            </div>
+            <div class="account-line">
+                <span>Despesas</span>
+                <strong class="negative">{{ item.total_despesas|format_brl }}</strong>
+            </div>
 
-        {% if item.conta.possui_cartao_credito %}
-        <div class="account-line">
-            <span>Fecha a fatura</span>
-            <strong>{{ item.conta.dias_antes_fechamento_fatura }} dias antes do vencimento</strong>
-        </div>
-        <div class="account-line">
-            <span>Vence a fatura</span>
-            <strong>Dia {{ item.conta.dia_vencimento_fatura }}</strong>
-        </div>
-        {% endif %}
+            <div class="account-line">
+                <span>Banco principal</span>
+                <strong>{% if item.conta.banco_principal %}Sim{% else %}Não{% endif %}</strong>
+            </div>
 
-        <div class="account-balance">{{ item.saldo_atual|format_brl }}</div>
+            <div class="account-line">
+                <span>Cartão de crédito</span>
+                <strong>{% if item.conta.possui_cartao_credito %}Sim{% else %}Não{% endif %}</strong>
+            </div>
 
-        <div class="actions" style="margin-top: 16px;">
-                        <a href="/contas/{{ item.conta.id }}/editar/" class="btn btn-light btn-small"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path></svg></span>Editar</a>
-                        <a href="/contas/{{ item.conta.id }}/excluir/" class="btn btn-danger btn-small"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg></span>Excluir</a>
+            {% if item.conta.possui_cartao_credito %}
+            <div class="account-line">
+                <span>Fecha a fatura</span>
+                <strong>{{ item.conta.dias_antes_fechamento_fatura }} dias antes do vencimento</strong>
+            </div>
+            <div class="account-line">
+                <span>Vence a fatura</span>
+                <strong>Dia {{ item.conta.dia_vencimento_fatura }}</strong>
+            </div>
+            {% endif %}
+
+            <div class="account-balance">{{ item.saldo_atual|format_brl }}</div>
+
+            <div class="actions card-actions">
+                <a href="/contas/{{ item.conta.id }}/editar/" class="btn btn-light btn-small"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path></svg></span>Editar</a>
+                <a href="/contas/{{ item.conta.id }}/excluir/" class="btn btn-danger btn-small"><span class="btn-icon"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg></span>Excluir</a>
+            </div>
         </div>
     </section>
     {% empty %}
@@ -78,4 +122,48 @@
 </div>
 
 {% include 'financeiro/pagination.html' with page_obj=page_obj querystring=querystring %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+    try { localStorage.removeItem('account_expanded_v1'); } catch (e) {}
+
+    document.querySelectorAll('.account-summary').forEach(function(summary){
+        var card = summary.closest('.account-card');
+        var btn = summary.querySelector('.account-toggle-details');
+
+        function setExpanded(expanded){
+            if (expanded) {
+                card.classList.add('expanded');
+                summary.setAttribute('aria-expanded', 'true');
+            } else {
+                card.classList.remove('expanded');
+                summary.setAttribute('aria-expanded', 'false');
+            }
+        }
+
+        function toggle(event){
+            if (event) {
+                event.preventDefault();
+            }
+            setExpanded(!card.classList.contains('expanded'));
+        }
+
+        summary.addEventListener('click', toggle);
+        summary.addEventListener('keydown', function(event){
+            if (event.key === 'Enter' || event.key === ' ') {
+                toggle(event);
+            }
+        });
+        if (btn) {
+            btn.addEventListener('click', function(event){
+                event.preventDefault();
+                event.stopPropagation();
+                setExpanded(!card.classList.contains('expanded'));
+            });
+        }
+    });
+});
+</script>
 {% endblock %}
